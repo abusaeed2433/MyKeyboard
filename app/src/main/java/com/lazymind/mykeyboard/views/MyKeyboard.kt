@@ -29,8 +29,14 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     init {
         init()
 
-        this.mainLayout = mainLayout()
-        this.secondLayout = secondLayout()
+        val listener = object : Layout.LayoutListener{
+            override fun onRefreshRequest() {
+                invalidate()
+            }
+        }
+
+        this.mainLayout = mainLayout(listener)
+        this.secondLayout = secondLayout(listener)
     }
 
     private fun init() {
@@ -71,7 +77,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 }
                 else {
                     canvas.drawText(
-                        item.key,
+                        if(getLayout().isCapsModeOn) item.key.uppercase() else item.key,
                         item.rect.left + (item.rect.width() - item.textWidth) / 2,
                         item.rect.top + keyHeight / 2 + 20, paint!!
                     )
@@ -158,7 +164,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         return item
     }
 
-    private fun mainLayout():Layout{
+    private fun mainLayout(listener: Layout.LayoutListener):Layout{
         val noOfRow = 5
         val items = Array(noOfRow){ArrayList<Layout.Item>()}
 
@@ -195,7 +201,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             }
         }
 
-        return Layout( noOfRow, items, Layout.LayoutType.MAIN )
+        return Layout( noOfRow, items, Layout.LayoutType.MAIN , layoutListener = listener)
     }
 
     private fun calcRows(row:Int, size:Int, keys:String,pressKeys:String?=null):ArrayList<Layout.Item>{
@@ -216,8 +222,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         return Layout.KeyType.NORMAL
     }
 
-    private fun secondLayout():Layout{
-        return mainLayout()
+    private fun secondLayout(listener: Layout.LayoutListener):Layout{
+        return mainLayout(listener)
     }
 
     fun setOnKeyboardActionListener(listener: OnKeyboardActionListener?) {

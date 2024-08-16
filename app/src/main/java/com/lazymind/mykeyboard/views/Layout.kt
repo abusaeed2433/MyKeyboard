@@ -7,7 +7,8 @@ import kotlin.math.max
 class Layout(
     val noOfRow:Int,
     val items: Array<ArrayList<Item>>,
-    val layoutType:LayoutType
+    val layoutType:LayoutType,
+    val layoutListener:LayoutListener
 ) {
 
     var isCapsModeOn = false
@@ -34,6 +35,7 @@ class Layout(
                 if(item.rect.contains(x,y)) {
                     if(item.isCaps()){
                         isCapsModeOn = !isCapsModeOn
+                        layoutListener.onRefreshRequest()
                     }
                     return item
                 }
@@ -53,6 +55,10 @@ class Layout(
         if(x < 0 || x >= noOfRow || y < 0 || y >= items[x].size) return null
 
         return items[x][y]
+    }
+
+    interface LayoutListener{
+        fun onRefreshRequest()
     }
 
     enum class LayoutType{ MAIN, SECONDARY }

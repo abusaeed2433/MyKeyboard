@@ -20,16 +20,17 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.OnKeyboardActionListe
     override fun onKeyPress(item: Layout.Item) {
         val inputConnection = currentInputConnection
 
+        if(item.isCaps()) return
+
         if(item.isBackSpace()){
             inputConnection.deleteSurroundingText(1,0)
-            return
         }
-        if(item.isSpace()){
+        else if(item.isSpace()){
             inputConnection.commitText(" ",1)
-            return
         }
-
-        inputConnection?.commitText(item.key, 1)
+        else {
+            inputConnection?.commitText(item.key, 1)
+        }
     }
 
 }
