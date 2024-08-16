@@ -106,7 +106,7 @@
             android:isRepeatable="true"
             android:keyWidth="15%p"
             android:keyEdgeFlags="right"
-            android:keyIcon="@drawable/ic_backspace" />
+            android:keyIcon="@drawable/backspace" />
     </Row>
 
     <Row android:rowEdgeFlags="bottom">

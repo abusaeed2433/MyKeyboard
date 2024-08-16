@@ -1,6 +1,8 @@
 package com.lazymind.mykeyboard.views
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -8,6 +10,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewTreeObserver
+import com.lazymind.mykeyboard.R
 
 class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
@@ -61,11 +64,18 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         for(row in getLayout().items){
             for(item in row){
-                canvas.drawText(
-                    item.key,
-                    item.rect.left + (item.rect.width() - item.textWidth)/2,
-                    item.rect.top + keyHeight/2 + 20, paint!!
-                )
+                if(item.hasIcon){
+                    getLayout().getIconFor(item).let {
+                        canvas.drawBitmap(it!!,null, item.rect,paint!!)
+                    }
+                }
+                else {
+                    canvas.drawText(
+                        item.key,
+                        item.rect.left + (item.rect.width() - item.textWidth) / 2,
+                        item.rect.top + keyHeight / 2 + 20, paint!!
+                    )
+                }
             }
         }
     }
@@ -84,7 +94,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 val textWidth = paint!!.measureText(item.key)
                 item.textWidth = textWidth
 
-                item.updateRect(x,y, x + (keyWidth * item.weight), y+keyHeight)
+                item.updateRectAndIcon(x, y, x + (keyWidth * item.weight), y+keyHeight)
 
                 startX += ( gap + keyWidth*item.weight)
             }
@@ -163,11 +173,25 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             val x = sp.x
             val y = sp.y
 
-            if(items[x][y].isSpace()){
-                items[x][y] = Layout.Item(x,y, "space", sp.weight)
+            if(x == -1 || y == -1) continue
+
+            val item = items[x][y]
+
+            if(item.isSpace()){
+                items[x][y] = Layout.Item(x,y, "space", sp.weight, keyType = item.keyType)
+            }
+            else if(item.isBackSpace()){
+                val bitmap: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.backspace)
+                items[x][y] = Layout.Item(x,y,item.key,sp.weight, keyType = item.keyType, bitmaps = mutableListOf(bitmap))
+            }
+            else if(item.isCaps()){
+                val bitmapOne: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.arrow_up_normal)
+                val bitmapTwo: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.arrow_up_filled)
+
+                items[x][y] = Layout.Item(x,y,item.key,sp.weight, keyType = item.keyType, bitmaps = mutableListOf(bitmapOne,bitmapTwo))
             }
             else{
-                items[x][y] = Layout.Item(x,y, items[x][y].key, sp.weight)
+                items[x][y] = Layout.Item(x,y, item.key, sp.weight, keyType = item.keyType)
             }
         }
 
@@ -179,10 +203,17 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         for(i in 0 until size){
             list.add(
-                Layout.Item( row,i, keys[i].toString(), pressKey = if(pressKeys == null) null else pressKeys[i].toString() )
+                Layout.Item( row,i, keys[i].toString(), pressKey = if(pressKeys == null) null else pressKeys[i].toString(), keyType = getKeyType(row,i) )
             )
         }
         return list
+    }
+
+    private fun getKeyType(x:Int, y:Int):Layout.KeyType{
+        for(type in Layout.KeyType.entries){
+            if(type.x == x && type.y == y) return type
+        }
+        return Layout.KeyType.NORMAL
     }
 
     private fun secondLayout():Layout{

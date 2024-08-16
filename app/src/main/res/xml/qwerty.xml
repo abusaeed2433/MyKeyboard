@@ -114,8 +114,7 @@
             android:codes="-1"
             android:keyWidth="15%p"
             android:keyEdgeFlags="left"
-
-            android:keyIcon="@drawable/up_arrow" />
+            android:keyIcon="@drawable/arrow_up_filled" />
         <Key
             android:codes="122"
             android:keyLabel="z" />
@@ -142,7 +141,7 @@
             android:isRepeatable="true"
             android:keyWidth="15%p"
             android:keyEdgeFlags="right"
-            android:keyIcon="@drawable/ic_backspace" />
+            android:keyIcon="@drawable/backspace" />
     </Row>
 
     <Row android:rowEdgeFlags="bottom">

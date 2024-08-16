@@ -24,6 +24,10 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.OnKeyboardActionListe
             inputConnection.deleteSurroundingText(1,0)
             return
         }
+        if(item.isSpace()){
+            inputConnection.commitText(" ",1)
+            return
+        }
 
         inputConnection?.commitText(item.key, 1)
     }
