@@ -2,6 +2,7 @@ package com.lazymind.mykeyboard
 
 import android.inputmethodservice.InputMethodService
 import android.view.View
+import com.lazymind.mykeyboard.views.Layout
 import com.lazymind.mykeyboard.views.MyKeyboard
 
 
@@ -20,5 +21,6 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.OnKeyboardActionListe
         val inputConnection = currentInputConnection
         inputConnection?.commitText(key, 1)
     }
+
 
 }
