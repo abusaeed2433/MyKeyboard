@@ -14,7 +14,10 @@ import com.lazymind.mykeyboard.R
 
 class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
-    private var paint: Paint? = null
+    private val textPaint: Paint = Paint()
+    private val wholeBackPaint: Paint = Paint()
+    private val itemBackPaint: Paint = Paint()
+
     private var listener: OnKeyboardActionListener? = null
     private var keyWidth = 0f
     private var keyHeight = 0f
@@ -40,9 +43,16 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     }
 
     private fun init() {
-        paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        paint!!.color = Color.BLACK
-        paint!!.textSize = 26f
+
+        for(paint in listOf(textPaint, itemBackPaint, wholeBackPaint)) {
+            paint.isAntiAlias = true
+            paint.textSize = 26f
+            paint.color = Color.BLACK
+        }
+        wholeBackPaint.color = Color.CYAN
+        itemBackPaint.color = Color.argb(200,240,240,240)
+        itemBackPaint.strokeWidth = 1f
+        itemBackPaint.strokeCap = Paint.Cap.ROUND
 
         viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
@@ -64,29 +74,29 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         if(!isReady) return
 
-        paint!!.color = Color.CYAN
-        canvas.drawRect(0f, 0f, width.toFloat(),  height.toFloat(), paint!!)
-        paint!!.color = Color.BLACK
+        canvas.drawRect(0f, 0f, width.toFloat(),  height.toFloat(), wholeBackPaint)
 
         for(row in getLayout().items){
             for(item in row){
                 if(item.hasIcon){
-                    getLayout().getIconFor(item).let {
-                        canvas.drawBitmap(it!!,null, item.rect,paint!!)
-                    }
+                    getLayout().getIconFor(item).let { canvas.drawBitmap(it!!,null, item.holderRect,wholeBackPaint) }
                 }
                 else {
                     canvas.drawText(
                         if(getLayout().isCapsModeOn) item.key.uppercase() else item.key,
-                        item.rect.left + (item.rect.width() - item.textWidth) / 2,
-                        item.rect.top + keyHeight / 2 + 20, paint!!
+                        item.baseRect.left + (item.baseRect.width() - item.textWidth) / 2,
+                        item.baseRect.top + keyHeight / 2 + 20, textPaint
                     )
                 }
+
+                canvas.drawRect(item.baseRect, itemBackPaint)
             }
         }
     }
 
     private fun processItems(){
+        val baseGap = 8f
+
         for(r in 0 until getLayout().items.size){
             val row = getLayout().items[r]
 
@@ -95,9 +105,9 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
             for(item in row){
                 val x = startX //item.y * keyWidth + startX
-                val y = item.x * keyHeight
+                val y = item.x * keyHeight + (baseGap*r)
 
-                val textWidth = paint!!.measureText(item.key)
+                val textWidth = textPaint.measureText(item.key)
                 item.textWidth = textWidth
 
                 item.updateRectAndIcon(x, y, x + (keyWidth * item.weight), y+keyHeight)

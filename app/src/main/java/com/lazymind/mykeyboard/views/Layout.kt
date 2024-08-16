@@ -32,7 +32,7 @@ class Layout(
     fun getHolderId(x:Float, y:Float):Item?{
         for(row in  items){
             for(item in row){
-                if(item.rect.contains(x,y)) {
+                if(item.baseRect.contains(x,y)) {
                     if(item.isCaps()){
                         isCapsModeOn = !isCapsModeOn
                         layoutListener.onRefreshRequest()
@@ -78,12 +78,18 @@ class Layout(
         val bitmaps:MutableList<Bitmap> = ArrayList()
     ){
 
-        val rect:RectF = RectF()
+        val baseRect:RectF = RectF()
+        val holderRect:RectF = RectF()
         var textWidth:Float = 0f
         val hasIcon:Boolean = bitmaps.isNotEmpty()
+        private var pad = .20f // 20%
 
         fun updateRectAndIcon(left: Float, top: Float, right: Float, bottom: Float) {
-            rect.set(left, top, right, bottom)
+            val widthPad = (right - left) * pad
+            val heightPad = (bottom - top) * pad
+
+            baseRect.set(left, top, right, bottom)
+            holderRect.set(left+widthPad, top+heightPad, right-widthPad, bottom-heightPad)
         }
 
         fun getBitmapAtIndex(index:Int):Bitmap?{
