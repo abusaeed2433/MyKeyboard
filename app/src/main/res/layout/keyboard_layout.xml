@@ -1,0 +1,14 @@
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/keyboard_grid"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:columnCount="10"
+    android:rowCount="4"
+    android:layout_margin="5dp"
+    android:orientation="horizontal"
+    android:padding="10dp"
+    android:gravity="center">
+
+    <!-- Buttons will be added dynamically in the code -->
+
+</GridLayout>
