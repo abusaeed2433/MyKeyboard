@@ -1,5 +1,6 @@
 package com.lazymind.mykeyboard.views
 
+import android.graphics.RectF
 import kotlin.math.max
 
 class Layout(
@@ -9,20 +10,29 @@ class Layout(
 ) {
 
     val maxWeight:Int
-    val rowWidth:IntArray = IntArray(noOfRow){0}
+    val rowWeight:IntArray = IntArray(noOfRow){0}
 
     init {
         var localMax = 0
         for(i in 0 until noOfRow){
-            rowWidth[i] = 0
+            rowWeight[i] = 0
             for(j in 0 until items[i].size){
-                rowWidth[i] += items[i][j].weight
+                rowWeight[i] += items[i][j].weight
             }
 
-            localMax = max(localMax, rowWidth[i])
+            localMax = max(localMax, rowWeight[i])
         }
 
         maxWeight = localMax
+    }
+
+    fun getHolderId(x:Float, y:Float):Item?{
+        for(row in  items){
+            for(item in row){
+                if(item.rect.contains(x,y)) return item
+            }
+        }
+        return null
     }
 
     fun getItemAt(x:Int, y: Int):Item?{
@@ -37,5 +47,16 @@ class Layout(
         CAPS(3,0), BACKSPACE(3,8),
         CHAR_DIG(4,0), LANGUAGE(4,2), SPACE(4,3,4), NEXT(4,5)
     }
-    class Item(val x:Int, val y:Int, val key:String, val weight: Int = 1, val pressKey:String?=null)
+
+    class Item(val x:Int, val y:Int, val key:String, val weight: Int = 1, val pressKey:String?=null){
+        val rect:RectF = RectF()
+        var textWidth:Float = 0f
+
+        fun updateRect(left:Float, top:Float, right:Float, bottom:Float){
+            rect.set(left,top,right,bottom)
+        }
+
+        fun isBackSpace():Boolean{  return (x == KeyType.BACKSPACE.x && y == KeyType.BACKSPACE.y)  }
+        fun isSpace():Boolean{  return (x == KeyType.SPACE.x && y == KeyType.SPACE.y)  }
+    }
 }

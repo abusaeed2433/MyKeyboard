@@ -1,6 +1,5 @@
 package com.lazymind.mykeyboard.views
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -43,6 +42,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 keyWidth = (width.toFloat() / mainLayout.maxWeight)
                 keyHeight = keyWidth //(height * .25f) / mainLayout.noOfRow
 
+                processItems()
                 requestLayout()
                 isReady = true
                 invalidate()
@@ -61,17 +61,34 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         for(row in getLayout().items){
             for(item in row){
+                canvas.drawText(
+                    item.key,
+                    item.rect.left + (item.rect.width() - item.textWidth)/2,
+                    item.rect.top + keyHeight/2 + 20, paint!!
+                )
+            }
+        }
+    }
 
-                val gap = ( ( getLayout().maxWeight - getLayout().rowWidth[item.x] ) * keyWidth ) / (row.size+2)
+    private fun processItems(){
+        for(r in 0 until getLayout().items.size){
+            val row = getLayout().items[r]
 
-                val x = item.y * keyWidth * item.weight + gap
+            val gap = ( ( getLayout().maxWeight - getLayout().rowWeight[r] ) * keyWidth ) / (row.size+2)
+            var startX = gap
+
+            for(item in row){
+                val x = startX //item.y * keyWidth + startX
                 val y = item.x * keyHeight
 
                 val textWidth = paint!!.measureText(item.key)
-                canvas.drawText(item.key, x+(keyWidth-textWidth)/2, y + keyHeight/2 + 20, paint!!)
+                item.textWidth = textWidth
+
+                item.updateRect(x,y, x + (keyWidth * item.weight), y+keyHeight)
+
+                startX += ( gap + keyWidth*item.weight)
             }
         }
-
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -92,24 +109,43 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         return if(isMainLayoutShowing) mainLayout else secondLayout
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (event.action == MotionEvent.ACTION_DOWN) {
+    override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
+        if(event?.action == MotionEvent.ACTION_DOWN){
+            println("Processing key press")
+            val item:Layout.Item? = getItemAt(event.x, event.y)
+            if(item == null){
+                println("Key is null")
+                return true
+            }
+            println("key is not null")
 
-            getKeyAt(event.x, event.y).let { listener?.onKeyPress(it) }
-
-            return true
+            listener?.onKeyPress(item)
         }
-        return super.onTouchEvent(event)
+        return super.dispatchTouchEvent(event)
     }
 
-    private fun getKeyAt(x: Float, y: Float): String? {
-        val column = (x / keyWidth).toInt()
-        val row = (y / keyHeight).toInt()
+//    @SuppressLint("ClickableViewAccessibility")
+//    override fun onTouchEvent(event: MotionEvent): Boolean {
+//        if (event.action == MotionEvent.ACTION_UP) {
+//
+//            println("Processing key press")
+//            val key:String? = getKeyAt(event.x, event.y)
+//            if(key == null){
+//                println("Key is null")
+//                return true
+//            }
+//            println("key is not null")
+//
+//            listener?.onKeyPress(key)
+//
+//            return true
+//        }
+//        return super.onTouchEvent(event)
+//    }
 
-        val item = getLayout().getItemAt(row,column) ?: return null
-
-        return item.key
+    private fun getItemAt(x: Float, y: Float): Layout.Item? {
+        val item = getLayout().getHolderId(x,y) ?: return null
+        return item
     }
 
     private fun mainLayout():Layout{
@@ -127,7 +163,12 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             val x = sp.x
             val y = sp.y
 
-            items[x][y] = Layout.Item(x,y, items[x][y].key, sp.weight)
+            if(items[x][y].isSpace()){
+                items[x][y] = Layout.Item(x,y, "space", sp.weight)
+            }
+            else{
+                items[x][y] = Layout.Item(x,y, items[x][y].key, sp.weight)
+            }
         }
 
         return Layout( noOfRow, items, Layout.LayoutType.MAIN )
@@ -153,7 +194,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     }
 
     interface OnKeyboardActionListener {
-        fun onKeyPress(key: String?)
+        fun onKeyPress(item: Layout.Item)
     }
 
 }

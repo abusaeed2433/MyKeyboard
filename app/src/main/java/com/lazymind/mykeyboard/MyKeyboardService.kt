@@ -17,10 +17,15 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.OnKeyboardActionListe
         return myKeyboard
     }
 
-    override fun onKeyPress(key: String?) {
+    override fun onKeyPress(item: Layout.Item) {
         val inputConnection = currentInputConnection
-        inputConnection?.commitText(key, 1)
-    }
 
+        if(item.isBackSpace()){
+            inputConnection.deleteSurroundingText(1,0)
+            return
+        }
+
+        inputConnection?.commitText(item.key, 1)
+    }
 
 }
