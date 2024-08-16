@@ -9,7 +9,6 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 
-
 class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
     private var paint: Paint? = null
@@ -33,8 +32,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         paint = Paint(Paint.ANTI_ALIAS_FLAG)
         paint!!.color = Color.BLACK
         paint!!.textSize = 20f
-        keyWidth = 100f // Example key width
-        keyHeight = 100f // Example key height
+        keyWidth = 100f
+        keyHeight = 100f
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -92,12 +91,10 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         return -1
     }
 
-    // Set listener for key presses
     fun setOnKeyboardActionListener(listener: OnKeyboardActionListener?) {
         this.listener = listener
     }
 
-    // Interface to communicate key presses
     interface OnKeyboardActionListener {
         fun onKeyPress(key: String?)
     }
