@@ -3,6 +3,7 @@ package com.lazymind.mykeyboard.classes
 import android.graphics.Bitmap
 import android.graphics.RectF
 
+// Don't call any function of this class directly. Call via the Row class
 class Item( val x:Int, val y:Int, var key:String,
     var weight: Int = 1, var pressKey:String? = null, var keyType: KeyType,// = KeyType.NORMAL,
     var bitmaps:MutableList<Bitmap> = ArrayList()
@@ -17,17 +18,15 @@ class Item( val x:Int, val y:Int, var key:String,
     val iconRect: RectF = RectF()
     var textWidth:Float = 0f
     var textHeight:Float = 0f
-    var hasIcon:Boolean = bitmaps.isNotEmpty()
 
-    fun update( key:String = this.key, weight: Int = this.weight, pressKey: String? = this.pressKey,
-                keyType: KeyType = this.keyType, bitmaps: MutableList<Bitmap> = this.bitmaps ){
-        this.key = key
-        this.weight = weight
-        this.pressKey = pressKey
-        this.keyType = keyType
-        this.bitmaps = bitmaps
 
-        hasIcon = bitmaps.isNotEmpty()
+    fun updateTextWidthHeight(textWidth:Float, textHeight:Float){
+        this.textWidth = textWidth
+        this.textHeight = textHeight
+    }
+
+    fun hasIcon():Boolean {
+        return bitmaps.isNotEmpty()
     }
 
     fun updateRectAndIcon(left: Float, top: Float, right: Float, bottom: Float) {
@@ -46,6 +45,7 @@ class Item( val x:Int, val y:Int, var key:String,
         return bitmaps[index]
     }
 
+    // Can call these ones
     fun isBackSpace():Boolean{  return (x == KeyType.BACKSPACE.x && y == KeyType.BACKSPACE.y)  }
     fun isSpace():Boolean{  return (x == KeyType.SPACE.x && y == KeyType.SPACE.y)  }
     fun isCaps():Boolean{  return (x == KeyType.CAPS.x && y == KeyType.CAPS.y)  }

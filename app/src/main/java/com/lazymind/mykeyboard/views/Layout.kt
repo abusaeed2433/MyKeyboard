@@ -4,28 +4,23 @@ import android.graphics.Bitmap
 import android.graphics.RectF
 import com.lazymind.mykeyboard.classes.Item
 import com.lazymind.mykeyboard.classes.LayoutType
+import com.lazymind.mykeyboard.classes.Row
 import kotlin.math.max
 
 class Layout(
     val noOfRow:Int,
-    val items: Array<ArrayList<Item>>,
+    val items: ArrayList<Row>,
     val layoutType: LayoutType,
     val layoutListener:LayoutListener
 ) {
 
     var isCapsModeOn = false
     val maxWeight:Int
-    val rowWeight:IntArray = IntArray(noOfRow){0}
 
     init {
         var localMax = 0
-        for(i in 0 until noOfRow){
-            rowWeight[i] = 0
-            for(j in 0 until items[i].size){
-                rowWeight[i] += items[i][j].weight
-            }
-
-            localMax = max(localMax, rowWeight[i])
+        for(row in items){
+            localMax = max(localMax, row.totalWeight)
         }
 
         maxWeight = localMax
@@ -33,7 +28,7 @@ class Layout(
 
     fun getHolderId(x:Float, y:Float):Item?{
         for(row in  items){
-            for(item in row){
+            for(item in row.items){
                 if(item.baseRect.contains(x,y)) {
                     if(item.isCaps()){
                         isCapsModeOn = !isCapsModeOn
@@ -46,17 +41,18 @@ class Layout(
         return null
     }
 
-    fun getIconFor(item:Item):Bitmap?{
+    fun getIconFor(row:Row, y:Int):Bitmap?{
+        val item = row.get(y)
         if(item.isCaps() && isCapsModeOn){
-            return item.getBitmapAtIndex(1)
+            return row.getBitmapAtIndex(y,1)
         }
-        return item.getBitmapAtIndex(0)
+        return row.getBitmapAtIndex(y,0)
     }
 
     fun getItemAt(x:Int, y: Int):Item?{
         if(x < 0 || x >= noOfRow || y < 0 || y >= items[x].size) return null
 
-        return items[x][y]
+        return items[x].get(y)
     }
 
     interface LayoutListener{
