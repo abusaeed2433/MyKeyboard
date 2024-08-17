@@ -5,5 +5,5 @@ enum class KeyType(val x:Int, val y:Int, val weight:Int=1){
 
     CAPS(3,0), BACKSPACE(3,8),
 
-    CHAR_DIG(4,0), LANGUAGE(4,2), SPACE(4,3,5), NEXT(4,5), NORMAL(-1,-1);
+    CHAR_DIG(4,0), SPACE(4,2,5), NEXT(4,4), NORMAL(-1,-1);
 }

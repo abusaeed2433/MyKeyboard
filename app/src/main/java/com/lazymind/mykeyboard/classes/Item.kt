@@ -2,6 +2,7 @@ package com.lazymind.mykeyboard.classes
 
 import android.graphics.Bitmap
 import android.graphics.RectF
+import kotlin.math.min
 
 // Don't call any function of this class directly. Call via the Row class
 class Item( val x:Int, val y:Int, var key:String,
@@ -9,13 +10,13 @@ class Item( val x:Int, val y:Int, var key:String,
     var bitmaps:MutableList<Bitmap> = ArrayList()
 ){
     companion object{
-        private const val ICON_PAD_WIDTH = .20f // 20%
-        private const val ICON_PAD_HEIGHT = .25f // 25%
-        private const val BASE_GAP = 0.02f // 5%
+        private const val ICON_PAD_GAP = .20f // 20%
+        private const val BORDER_GAP = 0.06f
     }
 
-    val baseRect: RectF = RectF()
-    val iconRect: RectF = RectF()
+    val baseRect: RectF = RectF() // used for checking click
+    val borderRect: RectF = RectF() // used for drawing
+    val iconRect: RectF = RectF() // used for drawing the icon
     var textWidth:Float = 0f
     var textHeight:Float = 0f
 
@@ -30,14 +31,26 @@ class Item( val x:Int, val y:Int, var key:String,
     }
 
     fun updateRectAndIcon(left: Float, top: Float, right: Float, bottom: Float) {
-        updateRect(baseRect, left, top, right, bottom, BASE_GAP, BASE_GAP)
-        updateRect(iconRect, left, top, right, bottom, ICON_PAD_WIDTH, ICON_PAD_HEIGHT)
+        updateBaseRect(left, top, right, bottom)
+        updateIconRect(left, top, right, bottom)
     }
 
-    private fun updateRect(rect: RectF, left: Float, top: Float, right: Float, bottom: Float, padWidth:Float, padHeight:Float) {
-        val widthPad = ((right - left)/weight) * padWidth
-        val heightPad = (bottom - top) * padHeight
-        rect.set(left+widthPad, top+heightPad, right-widthPad, bottom-heightPad)
+    private fun updateBaseRect(left: Float, top: Float, right: Float, bottom: Float){
+        val widthPad = ((right - left)/weight) * BORDER_GAP
+        val heightPad = (bottom - top) * BORDER_GAP
+        borderRect.set(left+widthPad, top+heightPad, right-widthPad, bottom-heightPad)
+        baseRect.set(left, top, right, bottom)
+    }
+
+    private fun updateIconRect(left: Float, top: Float, right: Float, bottom: Float){
+        val width = right - left
+        val height = bottom - top
+
+        val minSize = min( width, height ) * (1f - 2f*ICON_PAD_GAP)
+
+        val widthPad = (width - minSize) / 2
+        val heightPad = (height - minSize) / 2
+        iconRect.set(left+widthPad, top+heightPad, right-widthPad, bottom-heightPad)
     }
 
     fun getBitmapAtIndex(index:Int): Bitmap?{

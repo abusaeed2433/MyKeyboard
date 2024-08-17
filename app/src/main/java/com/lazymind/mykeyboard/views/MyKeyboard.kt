@@ -12,6 +12,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewTreeObserver
 import com.lazymind.mykeyboard.R
+import com.lazymind.mykeyboard.classes.GapType
 import com.lazymind.mykeyboard.classes.Item
 import com.lazymind.mykeyboard.classes.KeyType
 import com.lazymind.mykeyboard.classes.LayoutType
@@ -24,7 +25,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         const val TOP_GAP = 10
         const val RX = 6f
         const val RY = 6f
-        const val LEFT_RIGHT_GAP = 0.02f // 2%
+        const val LEFT_RIGHT_GAP = 0.01f // 2%
     }
 
     private val textPaint: Paint = Paint()
@@ -43,7 +44,6 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     constructor(context: Context?):this(context, null)
 
     init {
-        init()
 
         val listener = object : Layout.LayoutListener{
             override fun onRefreshRequest() {
@@ -53,6 +53,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         this.mainLayout = mainLayout(listener)
         this.secondLayout = secondLayout(listener)
+
+        init()
     }
 
     private fun init() {
@@ -92,15 +94,15 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             for(y in 0 until row.size){
                 val item = row.get(y)
 
-                canvas.drawRoundRect(item.baseRect, RX, RY, itemBackPaint)
+                canvas.drawRoundRect(item.borderRect, RX, RY, itemBackPaint)
                 if(row.hasIcon(y)){
                     getLayout().getIconFor(row,y).let { canvas.drawBitmap(it!!,null, item.iconRect, wholeBackPaint) }
                 }
                 else {
                     canvas.drawText(
                         if(getLayout().isCapsModeOn) item.key.uppercase() else item.key,
-                        item.baseRect.left + (item.baseRect.width() - item.textWidth) / 2,
-                        item.baseRect.bottom - (item.baseRect.height() - item.textHeight) / 2,
+                        item.borderRect.left + (item.borderRect.width() - item.textWidth) / 2,
+                        item.borderRect.bottom - (item.borderRect.height() - item.textHeight) / 2,
                         textPaint
                     )
                 }
@@ -112,17 +114,20 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         val baseGap = 8f
         val leftRightPad = LEFT_RIGHT_GAP * width
 
-        for(r in 0 until getLayout().items.size){
-            val row = getLayout().items[r]
+        val layout = getLayout()
 
-            val gap = ( ( getLayout().maxWeight - row.totalWeight ) * keyWidth ) / (row.size+2)
+        for(r in 0 until layout.noOfRow){
+            val row = layout.items[r]
+
+            val gap = calcGap(layout,row)
             var startX = gap
+            if(row.gapType == GapType.NO_START_END_GAP){ startX = 0f }
 
             for(col in 0 until row.size){
                 val item = row.get(col)
 
-                val x = startX + leftRightPad //item.y * keyWidth + startX
-                val y = item.x * keyHeight + (baseGap*r) + TOP_GAP
+                val coorX = startX + leftRightPad //item.y * keyWidth + startX
+                val coorY = item.x * keyHeight + (baseGap*r) + TOP_GAP
 
                 val textWidth = textPaint.measureText(item.key)
                 val bounds = Rect()
@@ -130,11 +135,35 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 val textHeight = bounds.height()
 
                 row.updateTextWidthHeight(col, textWidth, textHeight.toFloat())
-                row.updateRectAndIcon(col, x, y, x + (keyWidth * item.weight), y+keyHeight)
+                row.updateRectAndIcon(col, coorX, coorY, coorX + (keyWidth * item.weight), coorY+keyHeight)
 
-                startX += ( gap + keyWidth*item.weight)
+                if(row.gapType == GapType.NO_START_END_GAP){
+                    if(col == 0){
+                        row.updateRectAndIcon(col, coorX, coorY, coorX + (gap+ keyWidth * item.weight), coorY+keyHeight)
+                        startX += gap
+                    }
+                    else if(col == row.size-1){
+                        row.updateRectAndIcon(col, coorX, coorY, coorX + (gap+ keyWidth * item.weight), coorY+keyHeight)
+                    }
+                }
+
+                startX += keyWidth*item.weight
+                if(row.gapType == GapType.EVENLY) {
+                    startX += gap
+                }
             }
         }
+    }
+
+    private fun calcGap(layout: Layout,row:Row):Float {
+
+        val mainGap = ( layout.maxWeight - row.totalWeight ) * keyWidth
+
+        if(row.gapType == GapType.EVENLY){
+            return mainGap / (row.size+2)
+        }
+
+        return mainGap / 2f
     }
 
     private fun getNavBarHeight():Int {
@@ -190,11 +219,11 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         val noOfRow = 5
         val items = ArrayList<Row>()
 
-        items.add(calcBasicRows(0,6,"______")) // _ means special, will be updated later
+        items.add(calcBasicRows(0,6,"______", gapType = GapType.START_END)) // _ means special, will be updated later
         items.add(calcBasicRows(1,10,"qwertyuiop", "1234567890"))
-        items.add(calcBasicRows(2,9,"asdfghjkl"))
-        items.add(calcBasicRows(3,9,"_zxcvbnm_"))
-        items.add(calcBasicRows(4,6,"_,__._"))
+        items.add(calcBasicRows(2,9,"asdfghjkl", gapType = GapType.START_END))
+        items.add(calcBasicRows(3,9,"_zxcvbnm_", gapType = GapType.NO_START_END_GAP))
+        items.add(calcBasicRows(4,5,"_,_._", gapType = GapType.NO_START_END_GAP))
 
         // updating special item
         for(sp in KeyType.entries){
@@ -207,7 +236,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             val item = row.get(y)
 
             if(item.isSpace()){
-                row.update(y, key="space", weight = sp.weight)
+                row.update(y, key="", weight = sp.weight)
             }
             else if(item.isBackSpace()){
                 row.update(y, weight = sp.weight, bitmaps = mutableListOf( readBitmap(R.drawable.backspace) ) )
@@ -236,7 +265,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         return BitmapFactory.decodeResource(context.resources, id)
     }
 
-    private fun calcBasicRows(row:Int, size:Int, keys:String, pressKeys:String?=null):Row{
+    private fun calcBasicRows(row:Int, size:Int, keys:String, pressKeys:String? = null, gapType: GapType = GapType.EVENLY):Row{
         val list = ArrayList<Item>()
 
         for(col in 0 until size){
@@ -245,7 +274,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             )
         }
 
-        return Row(row, list)
+        return Row(row, list, gapType)
     }
 
     private fun getKeyType(x:Int, y:Int):KeyType{
