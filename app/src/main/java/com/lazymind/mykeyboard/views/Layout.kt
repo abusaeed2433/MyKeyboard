@@ -1,16 +1,15 @@
 package com.lazymind.mykeyboard.views
 
 import android.graphics.Bitmap
-import android.graphics.RectF
 import com.lazymind.mykeyboard.classes.Item
 import com.lazymind.mykeyboard.classes.LayoutType
 import com.lazymind.mykeyboard.classes.Row
-import com.lazymind.mykeyboard.classes.TopRow
+import com.lazymind.mykeyboard.classes.SpecialRow
 import kotlin.math.max
 
 class Layout(
     val noOfRow:Int,
-    val topRow: TopRow,
+    val topRow: SpecialRow,
     val items: ArrayList<Row>,
     val layoutType: LayoutType,
     val layoutListener:LayoutListener

@@ -28,9 +28,9 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
         if(item.isCaps()) return
 
         if(item.isBackSpace()){
-            val seq:CharSequence = inputConnection.getSelectedText(0)
+            val seq:CharSequence? = inputConnection.getSelectedText(0)
 
-            if(seq.isEmpty()){ // delete the last text
+            if(seq.isNullOrBlank()){ // delete the last text
                 inputConnection.deleteSurroundingText(1,0)
             }
             else { // delete the selected text
@@ -46,7 +46,7 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
             handleEditorAction(inputConnection, currentInputEditorInfo)
         }
         else {
-            inputConnection?.commitText(
+            inputConnection.commitText(
                 if(isCapsModeOn) item.key.uppercase() else item.key.lowercase(),
                 1
             )
@@ -56,18 +56,19 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
 
     private fun processWord(showNextWord:Boolean = false){
         if(showNextWord){ // select 3 probable words and show them
-
+            myKeyboard.showSuggestion(arrayOf("x","dd","ad","dd"))
             return
         }
 
         val seq = inputConnection.getTextBeforeCursor(30, 0) ?: return
 
         val lastSpaceIndex = seq.lastIndexOf(" ")
-        if(lastSpaceIndex == -1) return
 
-        val word = seq.substring(lastSpaceIndex)
+        val word = seq.substring(lastSpaceIndex+1)
+        if(word.length == 1) myKeyboard.showSuggestion(arrayOf("x","-","-","-"))
         if(word.length < 3) return
 
+        myKeyboard.showSuggestion(arrayOf("x","a","b","c"))
         // show 3 suggestions
     }
 

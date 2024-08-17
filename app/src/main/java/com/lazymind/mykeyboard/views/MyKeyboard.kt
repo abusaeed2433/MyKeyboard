@@ -17,7 +17,7 @@ import com.lazymind.mykeyboard.classes.Item
 import com.lazymind.mykeyboard.classes.KeyType
 import com.lazymind.mykeyboard.classes.LayoutType
 import com.lazymind.mykeyboard.classes.Row
-import com.lazymind.mykeyboard.classes.TopRow
+import com.lazymind.mykeyboard.classes.SpecialRow
 
 
 class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
@@ -37,7 +37,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     private var keyWidth = 0f
     private var keyHeight = 0f
 
-    private val topRow:TopRow
+    private val topRow:SpecialRow
     private val mainLayout: Layout
     private val secondLayout: Layout
 
@@ -47,6 +47,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     private var layoutType:LayoutType = LayoutType.MAIN
 
     private var row:Row? = null
+    private var specialRow:SpecialRow? = null
 
     constructor(context: Context?):this(context, null)
 
@@ -83,6 +84,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 keyWidth = (width.toFloat() - 2f*width*LEFT_RIGHT_GAP) / mainLayout.maxWeight
                 keyHeight = keyWidth + 0.2f * keyWidth //(height * .25f) / mainLayout.noOfRow
 
+                processSpecialRow()
                 for(layout in listOf(mainLayout, secondLayout)) {
                     processItems(mainLayout)
                     processItems(secondLayout)
@@ -104,7 +106,28 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         // First special row
         if(isSuggestionShowing){
+            specialRow = getLayout().topRow // row = topRow
 
+            for(y in 0 until specialRow!!.size){
+                val item = specialRow!!.get(y)
+
+                if(y < specialRow!!.size-1){
+                    canvas.drawLine(
+                        item.borderRect.right,
+                        item.borderRect.top,
+                        item.borderRect.right,
+                        item.borderRect.bottom,
+                        specialRow!!.paint
+                    )
+                }
+
+                canvas.drawText(
+                    if(getLayout().isCapsModeOn) specialRow!!.suggestions[y].uppercase() else specialRow!!.suggestions[y],
+                    item.borderRect.left + (item.borderRect.width() - item.textWidth) / 2,
+                    item.borderRect.bottom - (item.borderRect.height() - item.textHeight) / 2,
+                    specialRow!!.paint
+                )
+            }
         }
 
         // 0-all if suggestion is not showing else 1-all
@@ -126,6 +149,47 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                         textPaint
                     )
                 }
+            }
+        }
+    }
+
+    private fun processSpecialRow(){
+        val leftRightPad = LEFT_RIGHT_GAP * width
+
+        val row = topRow
+
+        val gap = calcGap(getLayout(),row)
+        var startX = gap
+
+        if(row.gapType == GapType.NO_START_END_GAP) { startX = 0f }
+
+        for(col in 0 until row.size){
+            val item = row.get(col)
+
+            val coorX = startX + leftRightPad //item.y * keyWidth + startX
+            val coorY = TOP_GAP.toFloat()
+
+            val textWidth = textPaint.measureText(item.key)
+            val bounds = Rect()
+            textPaint.getTextBounds(item.key, 0, item.key.length, bounds)
+            val textHeight = bounds.height()
+
+            row.updateTextWidthHeight(col, textWidth, textHeight.toFloat())
+            row.updateRectAndIcon(col, coorX, coorY, coorX + (keyWidth * item.weight), coorY+keyHeight)
+
+            if(row.gapType == GapType.NO_START_END_GAP){
+                if(col == 0){
+                    row.updateRectAndIcon(col, coorX, coorY, coorX + (gap+ keyWidth * item.weight), coorY+keyHeight)
+                    startX += gap
+                }
+                else if(col == row.size-1){
+                    row.updateRectAndIcon(col, coorX, coorY, coorX + (gap+ keyWidth * item.weight), coorY+keyHeight)
+                }
+            }
+
+            startX += keyWidth*item.weight
+            if(row.gapType == GapType.EVENLY) {
+                startX += gap
             }
         }
     }
@@ -233,10 +297,20 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     }
 
     // Layout initializer
-    private fun getTopRow(){
-        val itemZero = Item(0,0,"x", weight = 1, keyType = KeyType.CANCEL_PREVIEW)
-        val itemOne = Item(0,1,"", weight = 3, keyType = KeyType.CANCEL_PREVIEW)
-        items.add(calcBasicRows(0,6,"______", gapType = GapType.START_END)) // _ means special, will be updated later
+    private fun getTopRow():SpecialRow{
+        val itemZero = Item(0,0,"x", weight = KeyType.CANCEL_PREVIEW.weight, keyType = KeyType.CANCEL_PREVIEW)
+        val itemOne = Item(0,1,"-", weight = KeyType.SUGGEST_ONE.weight, keyType = KeyType.SUGGEST_ONE)
+        val itemTwo = Item(0,2,"-", weight = KeyType.SUGGEST_TWO.weight, keyType = KeyType.SUGGEST_TWO)
+        val itemThree = Item(0,3,"-", weight = KeyType.SUGGEST_THREE.weight, keyType = KeyType.SUGGEST_THREE)
+
+        val items = ArrayList<Item>()
+        items.add(itemZero)
+        items.add(itemOne)
+        items.add(itemTwo)
+        items.add(itemThree)
+
+        val textSizeF = context.resources.getDimension(R.dimen.key_size)
+        return SpecialRow.getInstance(textSizeF/25,0,items, GapType.EVENLY) // 25sp see dimen.xml
     }
 
     private fun mainLayout(listener: Layout.LayoutListener):Layout{
@@ -333,7 +407,11 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         for(col in 0 until size){
             list.add(
-                Item( row, col, keys[col].toString(), pressKey = if(pressKeys == null) null else pressKeys[col].toString(), keyType = getKeyType(row,col, layoutType) )
+                Item(
+                    row, col, keys[col].toString(),
+                    pressKey = if(pressKeys == null) null else pressKeys[col].toString(),
+                    keyType = getKeyType(layoutType,row,col)
+                )
             )
         }
 
@@ -341,7 +419,9 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     }
 
     fun showSuggestion(words:Array<String>){
-        as
+        isSuggestionShowing = true
+        specialRow?.update(words)
+        invalidate()
     }
 
     private fun getKeyType(layoutType: LayoutType, x:Int, y:Int):KeyType{
