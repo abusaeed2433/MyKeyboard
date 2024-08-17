@@ -78,9 +78,9 @@ class Layout(
         val bitmaps:MutableList<Bitmap> = ArrayList()
     ){
         companion object{
-            private const val HOLDER_PAD_WIDTH = .20f // 20%
-            private const val HOLDER_PAD_HEIGHT = .25f // 25%
-            private const val BASE_GAP = 0.05f // 5%
+            private const val ICON_PAD_WIDTH = .20f // 20%
+            private const val ICON_PAD_HEIGHT = .25f // 25%
+            private const val BASE_GAP = 0.02f // 5%
         }
 
         val baseRect:RectF = RectF()
@@ -91,7 +91,7 @@ class Layout(
 
         fun updateRectAndIcon(left: Float, top: Float, right: Float, bottom: Float) {
             updateRect(baseRect, left, top, right, bottom, BASE_GAP, BASE_GAP)
-            updateRect(iconRect, left, top, right, bottom, HOLDER_PAD_WIDTH, HOLDER_PAD_HEIGHT)
+            updateRect(iconRect, left, top, right, bottom, ICON_PAD_WIDTH, ICON_PAD_HEIGHT)
         }
 
         private fun updateRect(rect: RectF, left: Float, top: Float, right: Float, bottom: Float, padWidth:Float, padHeight:Float) {
