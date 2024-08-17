@@ -12,6 +12,9 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewTreeObserver
 import com.lazymind.mykeyboard.R
+import com.lazymind.mykeyboard.classes.Item
+import com.lazymind.mykeyboard.classes.KeyType
+import com.lazymind.mykeyboard.classes.LayoutType
 
 
 class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
@@ -26,7 +29,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     private val wholeBackPaint: Paint = Paint()
     private val itemBackPaint: Paint = Paint()
 
-    private var listener: OnKeyboardActionListener? = null
+    private var listener: MyKeyboardListener? = null
     private var keyWidth = 0f
     private var keyHeight = 0f
 
@@ -160,14 +163,14 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
         if(event?.action == MotionEvent.ACTION_DOWN){
             println("Processing key press")
-            val item:Layout.Item? = getItemAt(event.x, event.y)
+            val item:Item? = getItemAt(event.x, event.y)
             if(item == null){
                 println("Key is null")
                 return true
             }
             println("key is not null")
 
-            listener?.onKeyPress(item, getLayout().isCapsModeOn)
+            listener?.onKeyClicked(item, getLayout().isCapsModeOn)
         }
         return super.dispatchTouchEvent(event)
     }
@@ -191,14 +194,14 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 //        return super.onTouchEvent(event)
 //    }
 
-    private fun getItemAt(x: Float, y: Float): Layout.Item? {
+    private fun getItemAt(x: Float, y: Float): Item? {
         val item = getLayout().getHolderId(x,y) ?: return null
         return item
     }
 
     private fun mainLayout(listener: Layout.LayoutListener):Layout{
         val noOfRow = 5
-        val items = Array(noOfRow){ArrayList<Layout.Item>()}
+        val items = Array(noOfRow){ArrayList<Item>()}
 
         items[0] = calcRows(0,6,"______") // _ means special, will be updated later
         items[1] = calcRows(1,10,"qwertyuiop", "1234567890")
@@ -207,7 +210,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         items[4] = calcRows(4,6,"_,__._")
 
         // updating special item
-        for(sp in Layout.KeyType.entries){
+        for(sp in KeyType.entries){
             val x = sp.x
             val y = sp.y
 
@@ -216,58 +219,58 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             val item = items[x][y]
 
             if(item.isSpace()){
-                items[x][y] = Layout.Item(x,y, "space", sp.weight, keyType = item.keyType)
+                items[x][y] = Item(x,y, "space", sp.weight, keyType = item.keyType)
             }
             else if(item.isBackSpace()){
                 val bitmap: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.backspace)
-                items[x][y] = Layout.Item(x,y,item.key,sp.weight, keyType = item.keyType, bitmaps = mutableListOf(bitmap))
+                items[x][y] = Item(x,y,item.key,sp.weight, keyType = item.keyType, bitmaps = mutableListOf(bitmap))
             }
             else if(item.isNext()){
                 val bitmap: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.right_arrow)
-                items[x][y] = Layout.Item(x,y,item.key, sp.weight, keyType = item.keyType, bitmaps = mutableListOf(bitmap))
+                items[x][y] = Item(x,y,item.key, sp.weight, keyType = item.keyType, bitmaps = mutableListOf(bitmap))
             }
             else if(item.isCaps()){
                 val bitmapOne: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.arrow_up_normal)
                 val bitmapTwo: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.arrow_up_filled)
 
-                items[x][y] = Layout.Item(x,y,item.key,sp.weight, keyType = item.keyType, bitmaps = mutableListOf(bitmapOne,bitmapTwo))
+                items[x][y] = Item(x,y,item.key,sp.weight, keyType = item.keyType, bitmaps = mutableListOf(bitmapOne,bitmapTwo))
             }
             else{
-                items[x][y] = Layout.Item(x,y, item.key, sp.weight, keyType = item.keyType)
+                items[x][y] = Item(x,y, item.key, sp.weight, keyType = item.keyType)
             }
         }
 
-        return Layout( noOfRow, items, Layout.LayoutType.MAIN , layoutListener = listener)
+        return Layout( noOfRow, items, LayoutType.MAIN , layoutListener = listener)
     }
 
-    private fun calcRows(row:Int, size:Int, keys:String,pressKeys:String?=null):ArrayList<Layout.Item>{
-        val list = ArrayList<Layout.Item>()
+    private fun calcRows(row:Int, size:Int, keys:String,pressKeys:String?=null):ArrayList<Item>{
+        val list = ArrayList<Item>()
 
         for(i in 0 until size){
             list.add(
-                Layout.Item( row,i, keys[i].toString(), pressKey = if(pressKeys == null) null else pressKeys[i].toString(), keyType = getKeyType(row,i) )
+                Item( row,i, keys[i].toString(), pressKey = if(pressKeys == null) null else pressKeys[i].toString(), keyType = getKeyType(row,i) )
             )
         }
         return list
     }
 
-    private fun getKeyType(x:Int, y:Int):Layout.KeyType{
-        for(type in Layout.KeyType.entries){
+    private fun getKeyType(x:Int, y:Int):KeyType{
+        for(type in KeyType.entries){
             if(type.x == x && type.y == y) return type
         }
-        return Layout.KeyType.NORMAL
+        return KeyType.NORMAL
     }
 
     private fun secondLayout(listener: Layout.LayoutListener):Layout{
         return mainLayout(listener)
     }
 
-    fun setOnKeyboardActionListener(listener: OnKeyboardActionListener?) {
+    fun setOnKeyboardActionListener(listener: MyKeyboardListener?) {
         this.listener = listener
     }
 
-    interface OnKeyboardActionListener {
-        fun onKeyPress(item: Layout.Item, isCapsModeOn:Boolean)
+    interface MyKeyboardListener {
+        fun onKeyClicked(item: Item, isCapsModeOn:Boolean)
     }
 
 }

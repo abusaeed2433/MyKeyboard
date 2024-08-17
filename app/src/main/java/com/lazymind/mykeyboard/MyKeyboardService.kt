@@ -4,11 +4,11 @@ import android.inputmethodservice.InputMethodService
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
-import com.lazymind.mykeyboard.views.Layout
+import com.lazymind.mykeyboard.classes.Item
 import com.lazymind.mykeyboard.views.MyKeyboard
 
 
-class MyKeyboardService : InputMethodService(), MyKeyboard.OnKeyboardActionListener{
+class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
 
     private lateinit var myKeyboard: MyKeyboard
 
@@ -21,7 +21,7 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.OnKeyboardActionListe
         return myKeyboard
     }
 
-    override fun onKeyPress(item: Layout.Item, isCapsModeOn:Boolean) {
+    override fun onKeyClicked(item: Item, isCapsModeOn:Boolean) {
         val inputConnection = currentInputConnection
 
         if(item.isCaps()) return
