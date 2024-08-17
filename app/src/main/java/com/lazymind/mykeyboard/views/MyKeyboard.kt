@@ -249,7 +249,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         val noOfRow = 5
         val items = ArrayList<Row>()
 
-        items.add(calcBasicRows(0,6,"______", gapType = GapType.START_END)) // _ means special, will be updated later
+        items.add(this.mainLayout.items[0]) // reusing first special row
         items.add(calcBasicRows(1,10,"1234567890"))
         items.add(calcBasicRows(2,10,"@#\$_&-+()/", gapType = GapType.START_END))
         items.add(calcBasicRows(3,9,"=*\"':;!?_", gapType = GapType.NO_START_END_GAP))
