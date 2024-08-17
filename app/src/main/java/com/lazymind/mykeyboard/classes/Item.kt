@@ -63,4 +63,5 @@ class Item( val x:Int, val y:Int, var key:String,
     fun isSpace():Boolean{  return (x == KeyType.SPACE.x && y == KeyType.SPACE.y)  }
     fun isCaps():Boolean{  return (x == KeyType.CAPS.x && y == KeyType.CAPS.y)  }
     fun isNext():Boolean{  return (x == KeyType.NEXT.x && y == KeyType.NEXT.y)  }
+    fun isCharDig():Boolean{ return (x == KeyType.CHAR_DIG.x && y == KeyType.CHAR_DIG.y) }
 }

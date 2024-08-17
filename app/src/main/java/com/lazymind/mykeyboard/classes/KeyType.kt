@@ -1,9 +1,12 @@
 package com.lazymind.mykeyboard.classes
+import com.lazymind.mykeyboard.classes.LayoutType.*
 
-enum class KeyType(val x:Int, val y:Int, val weight:Int=1){
-    OPTIONS(0,0), STICKER(0,1), GIF(0,2), CLIPBOARD(0,3), THEME(0,4), MIC(0,5),
+enum class KeyType(val layoutType: LayoutType, val x:Int, val y:Int, val weight:Int=1){
+    OPTIONS(COMMON,0,0), STICKER(COMMON,0,1), GIF(COMMON,0,2), CLIPBOARD(COMMON,0,3), THEME(COMMON,0,4), MIC(COMMON,0,5),
 
-    CAPS(3,0), BACKSPACE(3,8),
+    CAPS(MAIN,3,0), BACKSPACE(COMMON,3,8),
 
-    CHAR_DIG(4,0), SPACE(4,2,5), NEXT(4,4), NORMAL(-1,-1);
+    CHAR_DIG(COMMON,4,0), SPACE(COMMON,4,2,5), NEXT(COMMON,4,4), NORMAL(COMMON,-1,-1),
+
+    DIG_SYMBOL(SECONDARY, 4,0)
 }

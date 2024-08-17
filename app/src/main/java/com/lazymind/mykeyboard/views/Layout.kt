@@ -41,9 +41,12 @@ class Layout(
         return null
     }
 
-    fun getIconFor(row:Row, y:Int):Bitmap?{
+    fun getIconFor(row:Row, y:Int, type: LayoutType):Bitmap?{
         val item = row.get(y)
         if(item.isCaps() && isCapsModeOn){
+            return row.getBitmapAtIndex(y,1)
+        }
+        if(item.isCharDig() && type != LayoutType.MAIN){
             return row.getBitmapAtIndex(y,1)
         }
         return row.getBitmapAtIndex(y,0)

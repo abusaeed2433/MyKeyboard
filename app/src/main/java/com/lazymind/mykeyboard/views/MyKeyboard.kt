@@ -40,6 +40,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     private val secondLayout: Layout
     private var isMainLayoutShowing = true
     private var isReady = false
+    private var layoutType:LayoutType = LayoutType.MAIN
 
     constructor(context: Context?):this(context, null)
 
@@ -75,7 +76,11 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 keyWidth = (width.toFloat() - 2f*width*LEFT_RIGHT_GAP) / mainLayout.maxWeight
                 keyHeight = keyWidth + 0.2f * keyWidth //(height * .25f) / mainLayout.noOfRow
 
-                processItems()
+                for(layout in listOf(mainLayout, secondLayout)) {
+                    processItems(mainLayout)
+                    processItems(secondLayout)
+                }
+
                 requestLayout()
                 isReady = true
                 invalidate()
@@ -96,7 +101,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
                 canvas.drawRoundRect(item.borderRect, RX, RY, itemBackPaint)
                 if(row.hasIcon(y)){
-                    getLayout().getIconFor(row,y).let { canvas.drawBitmap(it!!,null, item.iconRect, wholeBackPaint) }
+                    getLayout().getIconFor(row,y,layoutType).let { canvas.drawBitmap(it!!,null, item.iconRect, wholeBackPaint) }
                 }
                 else {
                     canvas.drawText(
@@ -110,11 +115,9 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         }
     }
 
-    private fun processItems(){
+    private fun processItems(layout: Layout){
         val baseGap = 8f
         val leftRightPad = LEFT_RIGHT_GAP * width
-
-        val layout = getLayout()
 
         for(r in 0 until layout.noOfRow){
             val row = layout.items[r]
@@ -195,13 +198,14 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
         if(event?.action == MotionEvent.ACTION_DOWN){
-            println("Processing key press")
-            val item:Item? = getItemAt(event.x, event.y)
-            if(item == null){
-                println("Key is null")
+            val item:Item = getItemAt(event.x, event.y) ?: return true
+
+            if(item.isCharDig()){
+                layoutType = if(isMainLayoutShowing) LayoutType.SECONDARY else LayoutType.MAIN
+                isMainLayoutShowing = !isMainLayoutShowing
+                invalidate()
                 return true
             }
-            println("key is not null")
 
             listener?.onKeyClicked(item, getLayout().isCapsModeOn)
         }
@@ -212,7 +216,6 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         val item = getLayout().getHolderId(x,y) ?: return null
         return item
     }
-
 
     // Layout initializer
     private fun mainLayout(listener: Layout.LayoutListener):Layout{
@@ -226,39 +229,77 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         items.add(calcBasicRows(4,5,"_,_._", gapType = GapType.NO_START_END_GAP))
 
         // updating special item
-        for(sp in KeyType.entries){
-            val x = sp.x
-            val y = sp.y
+        for(kt in KeyType.entries){
+            val x = kt.x
+            val y = kt.y
+
+            if(kt.layoutType != LayoutType.MAIN && kt.layoutType != LayoutType.COMMON) continue
 
             if(x == -1 || y == -1) continue
 
             val row = items[x]
             val item = row.get(y)
-
-            if(item.isSpace()){
-                row.update(y, key="", weight = sp.weight)
-            }
-            else if(item.isBackSpace()){
-                row.update(y, weight = sp.weight, bitmaps = mutableListOf( readBitmap(R.drawable.backspace) ) )
-            }
-            else if(item.isNext()){
-                row.update(y,
-                    weight = sp.weight,
-                    bitmaps = mutableListOf( readBitmap(R.drawable.right_arrow) )
-                )
-            }
-            else if(item.isCaps()){
-                row.update(y,
-                    weight = sp.weight,
-                    bitmaps = mutableListOf( readBitmap(R.drawable.arrow_up_normal), readBitmap(R.drawable.arrow_up_filled) )
-                )
-            }
-            else{
-                row.update(y,weight = sp.weight)
-            }
+            updateItem(row, item, y,kt)
         }
 
         return Layout( noOfRow, items, LayoutType.MAIN , layoutListener = listener)
+    }
+
+    private fun secondLayout(listener: Layout.LayoutListener):Layout{
+        val noOfRow = 5
+        val items = ArrayList<Row>()
+
+        items.add(calcBasicRows(0,6,"______", gapType = GapType.START_END)) // _ means special, will be updated later
+        items.add(calcBasicRows(1,10,"1234567890"))
+        items.add(calcBasicRows(2,10,"@#\$_&-+()/", gapType = GapType.START_END))
+        items.add(calcBasicRows(3,9,"=*\"':;!?_", gapType = GapType.NO_START_END_GAP))
+        items.add(calcBasicRows(4,5,"_,_._", gapType = GapType.NO_START_END_GAP))
+
+        // updating special item
+        for(kt in KeyType.entries){
+            val x = kt.x
+            val y = kt.y
+
+            if(kt.layoutType != LayoutType.SECONDARY && kt.layoutType != LayoutType.COMMON) continue
+
+            if(x == -1 || y == -1) continue
+
+            val row = items[x]
+            val item = row.get(y)
+            updateItem(row, item, y, kt)
+        }
+
+        return Layout( noOfRow, items, LayoutType.MAIN , layoutListener = listener)
+    }
+
+    private fun updateItem(row:Row, item:Item, y:Int, kt:KeyType){
+        if(item.isSpace()){
+            row.update(y, key="", weight = kt.weight)
+        }
+        else if(item.isBackSpace()){
+            row.update(y, weight = kt.weight, bitmaps = mutableListOf( readBitmap(R.drawable.backspace) ) )
+        }
+        else if(item.isNext()){
+            row.update(y,
+                weight = kt.weight,
+                bitmaps = mutableListOf( readBitmap(R.drawable.right_arrow) )
+            )
+        }
+        else if(item.isCaps()){
+            row.update(y,
+                weight = kt.weight,
+                bitmaps = mutableListOf( readBitmap(R.drawable.arrow_up_normal), readBitmap(R.drawable.arrow_up_filled) )
+            )
+        }
+        else if(item.isCharDig()){
+            row.update(y,
+                weight = kt.weight,
+                bitmaps = mutableListOf( readBitmap(R.drawable.ic_char), readBitmap(R.drawable.ic_digit) )
+            )
+        }
+        else{
+            row.update(y,weight = kt.weight)
+        }
     }
 
     private fun readBitmap(id:Int):Bitmap{
@@ -282,10 +323,6 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             if(type.x == x && type.y == y) return type
         }
         return KeyType.NORMAL
-    }
-
-    private fun secondLayout(listener: Layout.LayoutListener):Layout{
-        return mainLayout(listener)
     }
 
     fun setOnKeyboardActionListener(listener: MyKeyboardListener?) {
