@@ -17,6 +17,7 @@ import com.lazymind.mykeyboard.classes.Item
 import com.lazymind.mykeyboard.classes.KeyType
 import com.lazymind.mykeyboard.classes.LayoutType
 import com.lazymind.mykeyboard.classes.Row
+import com.lazymind.mykeyboard.classes.TopRow
 
 
 class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
@@ -36,11 +37,16 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     private var keyWidth = 0f
     private var keyHeight = 0f
 
+    private val topRow:TopRow
     private val mainLayout: Layout
     private val secondLayout: Layout
+
     private var isMainLayoutShowing = true
+    private var isSuggestionShowing = false
     private var isReady = false
     private var layoutType:LayoutType = LayoutType.MAIN
+
+    private var row:Row? = null
 
     constructor(context: Context?):this(context, null)
 
@@ -52,6 +58,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             }
         }
 
+        this.topRow = getTopRow()
         this.mainLayout = mainLayout(listener)
         this.secondLayout = secondLayout(listener)
 
@@ -95,13 +102,21 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         canvas.drawRect(0f, 0f, width.toFloat(),  height.toFloat(), wholeBackPaint)
 
-        for(row in getLayout().items){
-            for(y in 0 until row.size){
-                val item = row.get(y)
+        // First special row
+        if(isSuggestionShowing){
+
+        }
+
+        // 0-all if suggestion is not showing else 1-all
+        for(x in (if(isSuggestionShowing) 1 else 0) until getLayout().noOfRow){
+            row = getLayout().items[x]
+
+            for(y in 0 until row!!.size){
+                val item = row!!.get(y)
 
                 canvas.drawRoundRect(item.borderRect, RX, RY, itemBackPaint)
-                if(row.hasIcon(y)){
-                    getLayout().getIconFor(row,y,layoutType).let { canvas.drawBitmap(it!!,null, item.iconRect, wholeBackPaint) }
+                if(row!!.hasIcon(y)){
+                    getLayout().getIconFor(row!!,y,layoutType).let { canvas.drawBitmap(it!!,null, item.iconRect, wholeBackPaint) }
                 }
                 else {
                     canvas.drawText(
@@ -218,15 +233,21 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     }
 
     // Layout initializer
+    private fun getTopRow(){
+        val itemZero = Item(0,0,"x", weight = 1, keyType = KeyType.CANCEL_PREVIEW)
+        val itemOne = Item(0,1,"", weight = 3, keyType = KeyType.CANCEL_PREVIEW)
+        items.add(calcBasicRows(0,6,"______", gapType = GapType.START_END)) // _ means special, will be updated later
+    }
+
     private fun mainLayout(listener: Layout.LayoutListener):Layout{
         val noOfRow = 5
         val items = ArrayList<Row>()
 
-        items.add(calcBasicRows(0,6,"______", gapType = GapType.START_END)) // _ means special, will be updated later
-        items.add(calcBasicRows(1,10,"qwertyuiop", "1234567890"))
-        items.add(calcBasicRows(2,9,"asdfghjkl", gapType = GapType.START_END))
-        items.add(calcBasicRows(3,9,"_zxcvbnm_", gapType = GapType.NO_START_END_GAP))
-        items.add(calcBasicRows(4,5,"_,_._", gapType = GapType.NO_START_END_GAP))
+        items.add(calcBasicRows(LayoutType.MAIN,0,6,"______", gapType = GapType.START_END)) // _ means special, will be updated later
+        items.add(calcBasicRows(LayoutType.MAIN,1,10,"qwertyuiop", "1234567890"))
+        items.add(calcBasicRows(LayoutType.MAIN,2,9,"asdfghjkl", gapType = GapType.START_END))
+        items.add(calcBasicRows(LayoutType.MAIN,3,9,"_zxcvbnm_", gapType = GapType.NO_START_END_GAP))
+        items.add(calcBasicRows(LayoutType.MAIN,4,5,"_,_._", gapType = GapType.NO_START_END_GAP))
 
         // updating special item
         for(kt in KeyType.entries){
@@ -242,7 +263,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             updateItem(row, item, y,kt)
         }
 
-        return Layout( noOfRow, items, LayoutType.MAIN , layoutListener = listener)
+        return Layout(noOfRow, this.topRow, items, LayoutType.MAIN , layoutListener = listener)
     }
 
     private fun secondLayout(listener: Layout.LayoutListener):Layout{
@@ -250,10 +271,10 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         val items = ArrayList<Row>()
 
         items.add(this.mainLayout.items[0]) // reusing first special row
-        items.add(calcBasicRows(1,10,"1234567890"))
-        items.add(calcBasicRows(2,10,"@#\$_&-+()/", gapType = GapType.START_END))
-        items.add(calcBasicRows(3,9,"=*\"':;!?_", gapType = GapType.NO_START_END_GAP))
-        items.add(calcBasicRows(4,5,"_,_._", gapType = GapType.NO_START_END_GAP))
+        items.add(calcBasicRows(LayoutType.SECONDARY,1,10,"1234567890"))
+        items.add(calcBasicRows(LayoutType.SECONDARY,2,10,"@#\$_&-+()/", gapType = GapType.START_END))
+        items.add(calcBasicRows(LayoutType.SECONDARY,3,9,"=*\"':;!?_", gapType = GapType.NO_START_END_GAP))
+        items.add(calcBasicRows(LayoutType.SECONDARY,4,5,"_,_._", gapType = GapType.NO_START_END_GAP))
 
         // updating special item
         for(kt in KeyType.entries){
@@ -269,7 +290,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             updateItem(row, item, y, kt)
         }
 
-        return Layout( noOfRow, items, LayoutType.MAIN , layoutListener = listener)
+        return Layout( noOfRow, this.topRow, items, LayoutType.MAIN , layoutListener = listener)
     }
 
     private fun updateItem(row:Row, item:Item, y:Int, kt:KeyType){
@@ -306,21 +327,26 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         return BitmapFactory.decodeResource(context.resources, id)
     }
 
-    private fun calcBasicRows(row:Int, size:Int, keys:String, pressKeys:String? = null, gapType: GapType = GapType.EVENLY):Row{
+    private fun calcBasicRows(layoutType:LayoutType, row:Int, size:Int,
+                              keys:String, pressKeys:String? = null, gapType: GapType = GapType.EVENLY):Row {
         val list = ArrayList<Item>()
 
         for(col in 0 until size){
             list.add(
-                Item( row, col, keys[col].toString(), pressKey = if(pressKeys == null) null else pressKeys[col].toString(), keyType = getKeyType(row,col) )
+                Item( row, col, keys[col].toString(), pressKey = if(pressKeys == null) null else pressKeys[col].toString(), keyType = getKeyType(row,col, layoutType) )
             )
         }
 
         return Row(row, list, gapType)
     }
 
-    private fun getKeyType(x:Int, y:Int):KeyType{
+    fun showSuggestion(words:Array<String>){
+        as
+    }
+
+    private fun getKeyType(layoutType: LayoutType, x:Int, y:Int):KeyType{
         for(type in KeyType.entries){
-            if(type.x == x && type.y == y) return type
+            if(type.layoutType == layoutType && type.x == x && type.y == y) return type
         }
         return KeyType.NORMAL
     }

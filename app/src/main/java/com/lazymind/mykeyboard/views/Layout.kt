@@ -5,10 +5,12 @@ import android.graphics.RectF
 import com.lazymind.mykeyboard.classes.Item
 import com.lazymind.mykeyboard.classes.LayoutType
 import com.lazymind.mykeyboard.classes.Row
+import com.lazymind.mykeyboard.classes.TopRow
 import kotlin.math.max
 
 class Layout(
     val noOfRow:Int,
+    val topRow: TopRow,
     val items: ArrayList<Row>,
     val layoutType: LayoutType,
     val layoutListener:LayoutListener

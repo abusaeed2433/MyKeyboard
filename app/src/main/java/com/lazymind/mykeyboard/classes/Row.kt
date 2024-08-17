@@ -2,7 +2,7 @@ package com.lazymind.mykeyboard.classes
 
 import android.graphics.Bitmap
 
-class Row(val rowNo:Int, val items:ArrayList<Item>, val gapType: GapType) {
+open class Row(val rowNo:Int, val items:ArrayList<Item>, val gapType: GapType) {
 
     val size = items.size
     var totalWeight:Int = 0

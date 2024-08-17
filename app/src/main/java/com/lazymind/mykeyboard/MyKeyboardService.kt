@@ -11,6 +11,7 @@ import com.lazymind.mykeyboard.views.MyKeyboard
 class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
 
     private lateinit var myKeyboard: MyKeyboard
+    private lateinit var inputConnection:InputConnection
 
     override fun onCreateInputView(): View {
         myKeyboard =  MyKeyboard(this)
@@ -18,19 +19,28 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
 
         window.window?.navigationBarColor = resources.getColor(R.color.keyboard_back,null)
 
+        inputConnection = currentInputConnection
         return myKeyboard
     }
 
     override fun onKeyClicked(item: Item, isCapsModeOn:Boolean) {
-        val inputConnection = currentInputConnection
 
         if(item.isCaps()) return
 
         if(item.isBackSpace()){
-            inputConnection.deleteSurroundingText(1,0)
+            val seq:CharSequence = inputConnection.getSelectedText(0)
+
+            if(seq.isEmpty()){ // delete the last text
+                inputConnection.deleteSurroundingText(1,0)
+            }
+            else { // delete the selected text
+                inputConnection.deleteSurroundingText(0, 0)
+            }
+            processWord()
         }
         else if(item.isSpace()){
             inputConnection.commitText(" ",1)
+            processWord(showNextWord = true)
         }
         else if(item.isNext()){
             handleEditorAction(inputConnection, currentInputEditorInfo)
@@ -40,7 +50,25 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
                 if(isCapsModeOn) item.key.uppercase() else item.key.lowercase(),
                 1
             )
+            processWord()
         }
+    }
+
+    private fun processWord(showNextWord:Boolean = false){
+        if(showNextWord){ // select 3 probable words and show them
+
+            return
+        }
+
+        val seq = inputConnection.getTextBeforeCursor(30, 0) ?: return
+
+        val lastSpaceIndex = seq.lastIndexOf(" ")
+        if(lastSpaceIndex == -1) return
+
+        val word = seq.substring(lastSpaceIndex)
+        if(word.length < 3) return
+
+        // show 3 suggestions
     }
 
     private fun handleEditorAction(inputConnection: InputConnection, editorInfo: EditorInfo) {

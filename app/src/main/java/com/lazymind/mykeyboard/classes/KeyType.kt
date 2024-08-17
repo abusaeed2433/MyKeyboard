@@ -8,5 +8,7 @@ enum class KeyType(val layoutType: LayoutType, val x:Int, val y:Int, val weight:
 
     CHAR_DIG(COMMON,4,0), SPACE(COMMON,4,2,5), NEXT(COMMON,4,4), NORMAL(COMMON,-1,-1),
 
-    DIG_SYMBOL(SECONDARY, 4,0)
+    DIG_SYMBOL(SECONDARY, 4,0),
+    CANCEL_PREVIEW(TOP_ROW,0,0,1),
+    SUGGEST_ONE(TOP_ROW,0,1,3), SUGGEST_TWO(TOP_ROW,0,2,3), SUGGEST_THREE(TOP_ROW,0,3,3);
 }
