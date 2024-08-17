@@ -3,12 +3,9 @@ package com.lazymind.mykeyboard.classes
 import android.graphics.Bitmap
 import android.graphics.RectF
 
-class Item(
-    val x:Int, val y:Int, val key:String,
-    val weight: Int = 1,
-    val pressKey:String? = null,
-    val keyType: KeyType,// = KeyType.NORMAL,
-    val bitmaps:MutableList<Bitmap> = ArrayList()
+class Item( val x:Int, val y:Int, var key:String,
+    var weight: Int = 1, var pressKey:String? = null, var keyType: KeyType,// = KeyType.NORMAL,
+    var bitmaps:MutableList<Bitmap> = ArrayList()
 ){
     companion object{
         private const val ICON_PAD_WIDTH = .20f // 20%
@@ -20,7 +17,18 @@ class Item(
     val iconRect: RectF = RectF()
     var textWidth:Float = 0f
     var textHeight:Float = 0f
-    val hasIcon:Boolean = bitmaps.isNotEmpty()
+    var hasIcon:Boolean = bitmaps.isNotEmpty()
+
+    fun update( key:String = this.key, weight: Int = this.weight, pressKey: String? = this.pressKey,
+                keyType: KeyType = this.keyType, bitmaps: MutableList<Bitmap> = this.bitmaps ){
+        this.key = key
+        this.weight = weight
+        this.pressKey = pressKey
+        this.keyType = keyType
+        this.bitmaps = bitmaps
+
+        hasIcon = bitmaps.isNotEmpty()
+    }
 
     fun updateRectAndIcon(left: Float, top: Float, right: Float, bottom: Float) {
         updateRect(baseRect, left, top, right, bottom, BASE_GAP, BASE_GAP)

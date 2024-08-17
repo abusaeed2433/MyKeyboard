@@ -23,6 +23,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         const val TOP_GAP = 10
         const val RX = 6f
         const val RY = 6f
+        const val LEFT_RIGHT_GAP = 0.02f // 2%
     }
 
     private val textPaint: Paint = Paint()
@@ -68,7 +69,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             override fun onGlobalLayout() {
                 viewTreeObserver.removeOnGlobalLayoutListener(this)
 
-                keyWidth = (width.toFloat() / mainLayout.maxWeight)
+                keyWidth = (width.toFloat() - 2f*width*LEFT_RIGHT_GAP) / mainLayout.maxWeight
                 keyHeight = keyWidth + 0.2f * keyWidth //(height * .25f) / mainLayout.noOfRow
 
                 processItems()
@@ -107,6 +108,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
     private fun processItems(){
         val baseGap = 8f
+        val leftRightPad = LEFT_RIGHT_GAP * width
 
         for(r in 0 until getLayout().items.size){
             val row = getLayout().items[r]
@@ -115,7 +117,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             var startX = gap
 
             for(item in row){
-                val x = startX //item.y * keyWidth + startX
+                val x = startX + leftRightPad //item.y * keyWidth + startX
                 val y = item.x * keyHeight + (baseGap*r) + TOP_GAP
 
                 val textWidth = textPaint.measureText(item.key)
@@ -175,30 +177,13 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         return super.dispatchTouchEvent(event)
     }
 
-//    @SuppressLint("ClickableViewAccessibility")
-//    override fun onTouchEvent(event: MotionEvent): Boolean {
-//        if (event.action == MotionEvent.ACTION_UP) {
-//
-//            println("Processing key press")
-//            val key:String? = getKeyAt(event.x, event.y)
-//            if(key == null){
-//                println("Key is null")
-//                return true
-//            }
-//            println("key is not null")
-//
-//            listener?.onKeyPress(key)
-//
-//            return true
-//        }
-//        return super.onTouchEvent(event)
-//    }
-
     private fun getItemAt(x: Float, y: Float): Item? {
         val item = getLayout().getHolderId(x,y) ?: return null
         return item
     }
 
+
+    // Layout initializer
     private fun mainLayout(listener: Layout.LayoutListener):Layout{
         val noOfRow = 5
         val items = Array(noOfRow){ArrayList<Item>()}
@@ -219,28 +204,33 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             val item = items[x][y]
 
             if(item.isSpace()){
-                items[x][y] = Item(x,y, "space", sp.weight, keyType = item.keyType)
+                item.update(key="space", weight = sp.weight)
             }
             else if(item.isBackSpace()){
-                val bitmap: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.backspace)
-                items[x][y] = Item(x,y,item.key,sp.weight, keyType = item.keyType, bitmaps = mutableListOf(bitmap))
+                item.update( weight = sp.weight, bitmaps = mutableListOf( readBitmap(R.drawable.backspace) ) )
             }
             else if(item.isNext()){
-                val bitmap: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.right_arrow)
-                items[x][y] = Item(x,y,item.key, sp.weight, keyType = item.keyType, bitmaps = mutableListOf(bitmap))
+                item.update(
+                    weight = sp.weight,
+                    bitmaps = mutableListOf( readBitmap(R.drawable.right_arrow) )
+                )
             }
             else if(item.isCaps()){
-                val bitmapOne: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.arrow_up_normal)
-                val bitmapTwo: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.arrow_up_filled)
-
-                items[x][y] = Item(x,y,item.key,sp.weight, keyType = item.keyType, bitmaps = mutableListOf(bitmapOne,bitmapTwo))
+                item.update(
+                    weight = sp.weight,
+                    bitmaps = mutableListOf( readBitmap(R.drawable.arrow_up_normal), readBitmap(R.drawable.arrow_up_filled) )
+                )
             }
             else{
-                items[x][y] = Item(x,y, item.key, sp.weight, keyType = item.keyType)
+                item.update(weight = sp.weight)
             }
         }
 
         return Layout( noOfRow, items, LayoutType.MAIN , layoutListener = listener)
+    }
+
+    private fun readBitmap(id:Int):Bitmap{
+        return BitmapFactory.decodeResource(context.resources, id)
     }
 
     private fun calcRows(row:Int, size:Int, keys:String,pressKeys:String?=null):ArrayList<Item>{
