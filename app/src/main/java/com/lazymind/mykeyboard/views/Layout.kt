@@ -95,7 +95,7 @@ class Layout(
         }
 
         private fun updateRect(rect: RectF, left: Float, top: Float, right: Float, bottom: Float, padWidth:Float, padHeight:Float) {
-            val widthPad = (right - left) * padWidth
+            val widthPad = ((right - left)/weight) * padWidth
             val heightPad = (bottom - top) * padHeight
             rect.set(left+widthPad, top+heightPad, right-widthPad, bottom-heightPad)
         }

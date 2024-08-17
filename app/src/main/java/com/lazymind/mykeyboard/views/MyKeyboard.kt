@@ -18,6 +18,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
     companion object{
         const val TOP_GAP = 10
+        const val RX = 6f
+        const val RY = 6f
     }
 
     private val textPaint: Paint = Paint()
@@ -83,7 +85,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         for(row in getLayout().items){
             for(item in row){
-                canvas.drawRect(item.baseRect, itemBackPaint)
+                canvas.drawRoundRect(item.baseRect, RX, RY, itemBackPaint)
+//                canvas.drawRect(item.baseRect, itemBackPaint)
                 if(item.hasIcon){
                     getLayout().getIconFor(item).let { canvas.drawBitmap(it!!,null, item.iconRect, wholeBackPaint) }
                 }
