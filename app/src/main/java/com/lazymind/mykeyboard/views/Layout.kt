@@ -84,14 +84,14 @@ class Layout(
         }
 
         val baseRect:RectF = RectF()
-        val holderRect:RectF = RectF()
+        val iconRect:RectF = RectF()
         var textWidth:Float = 0f
         var textHeight:Float = 0f
         val hasIcon:Boolean = bitmaps.isNotEmpty()
 
         fun updateRectAndIcon(left: Float, top: Float, right: Float, bottom: Float) {
             updateRect(baseRect, left, top, right, bottom, BASE_GAP, BASE_GAP)
-            updateRect(holderRect, left, top, right, bottom, HOLDER_PAD_WIDTH, HOLDER_PAD_HEIGHT)
+            updateRect(iconRect, left, top, right, bottom, HOLDER_PAD_WIDTH, HOLDER_PAD_HEIGHT)
         }
 
         private fun updateRect(rect: RectF, left: Float, top: Float, right: Float, bottom: Float, padWidth:Float, padHeight:Float) {
@@ -108,5 +108,6 @@ class Layout(
         fun isBackSpace():Boolean{  return (x == KeyType.BACKSPACE.x && y == KeyType.BACKSPACE.y)  }
         fun isSpace():Boolean{  return (x == KeyType.SPACE.x && y == KeyType.SPACE.y)  }
         fun isCaps():Boolean{  return (x == KeyType.CAPS.x && y == KeyType.CAPS.y)  }
+        fun isNext():Boolean{  return (x == KeyType.NEXT.x && y == KeyType.NEXT.y)  }
     }
 }

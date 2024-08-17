@@ -85,7 +85,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             for(item in row){
                 canvas.drawRect(item.baseRect, itemBackPaint)
                 if(item.hasIcon){
-                    getLayout().getIconFor(item).let { canvas.drawBitmap(it!!,null, item.holderRect, wholeBackPaint) }
+                    getLayout().getIconFor(item).let { canvas.drawBitmap(it!!,null, item.iconRect, wholeBackPaint) }
                 }
                 else {
                     canvas.drawText(
@@ -218,6 +218,10 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             else if(item.isBackSpace()){
                 val bitmap: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.backspace)
                 items[x][y] = Layout.Item(x,y,item.key,sp.weight, keyType = item.keyType, bitmaps = mutableListOf(bitmap))
+            }
+            else if(item.isNext()){
+                val bitmap: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.right_arrow)
+                items[x][y] = Layout.Item(x,y,item.key, sp.weight, keyType = item.keyType, bitmaps = mutableListOf(bitmap))
             }
             else if(item.isCaps()){
                 val bitmapOne: Bitmap = BitmapFactory.decodeResource(context.resources,R.drawable.arrow_up_normal)
