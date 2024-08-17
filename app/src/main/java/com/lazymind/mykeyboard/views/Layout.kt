@@ -67,7 +67,7 @@ class Layout(
 
         CAPS(3,0), BACKSPACE(3,8),
 
-        CHAR_DIG(4,0), LANGUAGE(4,2), SPACE(4,3,4), NEXT(4,5), NORMAL(-1,-1);
+        CHAR_DIG(4,0), LANGUAGE(4,2), SPACE(4,3,5), NEXT(4,5), NORMAL(-1,-1);
     }
 
     class Item(
@@ -77,19 +77,27 @@ class Layout(
         val keyType:KeyType,// = KeyType.NORMAL,
         val bitmaps:MutableList<Bitmap> = ArrayList()
     ){
+        companion object{
+            private const val HOLDER_PAD_WIDTH = .20f // 20%
+            private const val HOLDER_PAD_HEIGHT = .25f // 25%
+            private const val BASE_GAP = 0.05f // 5%
+        }
 
         val baseRect:RectF = RectF()
         val holderRect:RectF = RectF()
         var textWidth:Float = 0f
+        var textHeight:Float = 0f
         val hasIcon:Boolean = bitmaps.isNotEmpty()
-        private var pad = .20f // 20%
 
         fun updateRectAndIcon(left: Float, top: Float, right: Float, bottom: Float) {
-            val widthPad = (right - left) * pad
-            val heightPad = (bottom - top) * pad
+            updateRect(baseRect, left, top, right, bottom, BASE_GAP, BASE_GAP)
+            updateRect(holderRect, left, top, right, bottom, HOLDER_PAD_WIDTH, HOLDER_PAD_HEIGHT)
+        }
 
-            baseRect.set(left, top, right, bottom)
-            holderRect.set(left+widthPad, top+heightPad, right-widthPad, bottom-heightPad)
+        private fun updateRect(rect: RectF, left: Float, top: Float, right: Float, bottom: Float, padWidth:Float, padHeight:Float) {
+            val widthPad = (right - left) * padWidth
+            val heightPad = (bottom - top) * padHeight
+            rect.set(left+widthPad, top+heightPad, right-widthPad, bottom-heightPad)
         }
 
         fun getBitmapAtIndex(index:Int):Bitmap?{

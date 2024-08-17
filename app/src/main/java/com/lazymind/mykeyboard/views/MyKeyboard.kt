@@ -6,13 +6,19 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewTreeObserver
 import com.lazymind.mykeyboard.R
 
+
 class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
+
+    companion object{
+        const val TOP_GAP = 10
+    }
 
     private val textPaint: Paint = Paint()
     private val wholeBackPaint: Paint = Paint()
@@ -43,14 +49,13 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     }
 
     private fun init() {
+        textPaint.isAntiAlias = true
+        textPaint.textSize = context.resources.getDimension(R.dimen.key_size)
+        textPaint.color = Color.BLACK
 
-        for(paint in listOf(textPaint, itemBackPaint, wholeBackPaint)) {
-            paint.isAntiAlias = true
-            paint.textSize = 26f
-            paint.color = Color.BLACK
-        }
-        wholeBackPaint.color = Color.CYAN
-        itemBackPaint.color = Color.argb(200,240,240,240)
+        wholeBackPaint.color = resources.getColor(R.color.keyboard_back,null)
+
+        itemBackPaint.color = resources.getColor(R.color.key_back,null)
         itemBackPaint.strokeWidth = 1f
         itemBackPaint.strokeCap = Paint.Cap.ROUND
 
@@ -59,7 +64,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 viewTreeObserver.removeOnGlobalLayoutListener(this)
 
                 keyWidth = (width.toFloat() / mainLayout.maxWeight)
-                keyHeight = keyWidth //(height * .25f) / mainLayout.noOfRow
+                keyHeight = keyWidth + 0.2f * keyWidth //(height * .25f) / mainLayout.noOfRow
 
                 processItems()
                 requestLayout()
@@ -78,18 +83,18 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         for(row in getLayout().items){
             for(item in row){
+                canvas.drawRect(item.baseRect, itemBackPaint)
                 if(item.hasIcon){
-                    getLayout().getIconFor(item).let { canvas.drawBitmap(it!!,null, item.holderRect,wholeBackPaint) }
+                    getLayout().getIconFor(item).let { canvas.drawBitmap(it!!,null, item.holderRect, wholeBackPaint) }
                 }
                 else {
                     canvas.drawText(
                         if(getLayout().isCapsModeOn) item.key.uppercase() else item.key,
                         item.baseRect.left + (item.baseRect.width() - item.textWidth) / 2,
-                        item.baseRect.top + keyHeight / 2 + 20, textPaint
+                        item.baseRect.bottom - (item.baseRect.height() - item.textHeight) / 2,
+                        textPaint
                     )
                 }
-
-                canvas.drawRect(item.baseRect, itemBackPaint)
             }
         }
     }
@@ -105,10 +110,15 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
             for(item in row){
                 val x = startX //item.y * keyWidth + startX
-                val y = item.x * keyHeight + (baseGap*r)
+                val y = item.x * keyHeight + (baseGap*r) + TOP_GAP
 
                 val textWidth = textPaint.measureText(item.key)
+                val bounds = Rect()
+                textPaint.getTextBounds(item.key, 0, item.key.length, bounds)
+                val textHeight = bounds.height()
+
                 item.textWidth = textWidth
+                item.textHeight = textHeight.toFloat()
 
                 item.updateRectAndIcon(x, y, x + (keyWidth * item.weight), y+keyHeight)
 
@@ -117,16 +127,25 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         }
     }
 
+    private fun getNavBarHeight():Int {
+        val id = context.resources.getIdentifier("navigation_bar_height","dimen","android")
+
+        if(id > 0){
+            return context.resources.getDimensionPixelSize(id)
+        }
+        return 0
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val totalRows: Int = getLayout().noOfRow
 
-        val itemHeight = (totalRows * keyHeight).toInt()
-        val itemWidth = getLayout().maxWeight * keyWidth.toInt()
+        val viewHeight = (totalRows * keyHeight).toInt() + getNavBarHeight()/3 + TOP_GAP
+        val viewWidth = getLayout().maxWeight * keyWidth.toInt()
 
-        println("Item height: $itemHeight and width: $itemWidth")
+        println("Item height: $viewHeight and width: $viewWidth")
 
-        val width = resolveSize(itemWidth, widthMeasureSpec)
-        val height = resolveSize(itemHeight, heightMeasureSpec)
+        val width = resolveSize(viewWidth, widthMeasureSpec)
+        val height = resolveSize(viewHeight, heightMeasureSpec)
 
         setMeasuredDimension(width, height)
     }
@@ -145,7 +164,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             }
             println("key is not null")
 
-            listener?.onKeyPress(item)
+            listener?.onKeyPress(item, getLayout().isCapsModeOn)
         }
         return super.dispatchTouchEvent(event)
     }
@@ -241,7 +260,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     }
 
     interface OnKeyboardActionListener {
-        fun onKeyPress(item: Layout.Item)
+        fun onKeyPress(item: Layout.Item, isCapsModeOn:Boolean)
     }
 
 }
