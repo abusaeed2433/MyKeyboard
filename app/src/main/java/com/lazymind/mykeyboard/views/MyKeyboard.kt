@@ -39,8 +39,12 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     private var specialRowHeight = 0f
 
     private val topRow:SpecialRow
+
     private val mainLayout: Layout
-    private val secondLayout: Layout
+    private val digitSymbolLayout: Layout
+    private val symbolLayout: Layout
+
+    private val allLayouts:List<Layout>
 
     private var currentLayoutType:LayoutType = LayoutType.MAIN
     private var isSuggestionShowing = false
@@ -59,7 +63,10 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         this.topRow = getTopRow()
         this.mainLayout = mainLayout(listener)
-        this.secondLayout = digitSymbol(listener)
+        this.digitSymbolLayout = digitSymbol(listener)
+        this.symbolLayout = symbolLayout(listener)
+
+        this.allLayouts = listOf(mainLayout, digitSymbolLayout,symbolLayout)
 
         init()
     }
@@ -86,7 +93,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 updateHeight(specialRowHeight, keyHeight)
 
                 processSpecialRow()
-                for(layout in listOf(mainLayout, secondLayout)) {
+                for(layout in allLayouts) {
                     processItems(layout)
                 }
 
@@ -157,7 +164,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
     private fun updateHeight(specialRowHeight: Float, keyHeight:Float){
         topRow.height = specialRowHeight
-        for(layout in listOf(mainLayout, secondLayout)){
+        for(layout in this.allLayouts){
             layout.topRow.height = specialRowHeight
             layout.items[0].height = specialRowHeight
 
@@ -291,7 +298,11 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     }
 
     private fun getLayout():Layout{
-        return if(currentLayoutType == LayoutType.MAIN) mainLayout else secondLayout
+        if(currentLayoutType == LayoutType.DIGIT_SYMBOL) return digitSymbolLayout
+
+        if(currentLayoutType == LayoutType.SYMBOL) return symbolLayout
+
+        return mainLayout
     }
 
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
@@ -410,32 +421,59 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         return Layout( noOfRow, this.topRow, items, LayoutType.DIGIT_SYMBOL , layoutListener = listener)
     }
 
+    private fun symbolLayout(listener: Layout.LayoutListener):Layout {
+        val noOfRow = 5
+        val items = ArrayList<Row>()
+
+        items.add(this.mainLayout.items[0]) // reusing first special row
+        items.add(calcBasicRows(LayoutType.SYMBOL,1,10,"~`|•√π÷×§∆"))
+        items.add(calcBasicRows(LayoutType.SYMBOL,2,10,"€¥\$¢^°={}\\", gapType = GapType.START_END))
+        items.add(calcBasicRows(LayoutType.SYMBOL,3,9,"_%©®™✓[]_", gapType = GapType.NO_START_END_GAP))
+        items.add(calcBasicRows(LayoutType.SYMBOL,4,5,"_,_._", gapType = GapType.NO_START_END_GAP))
+
+        // updating special item
+        for(kt in KeyType.entries){
+            val x = kt.x
+            val y = kt.y
+
+            if(!kt.doesHave(LayoutType.SYMBOL)) continue
+
+            if(x == -1 || y == -1) continue
+
+            val row = items[x]
+            val item = row.get(y)
+            updateItem(LayoutType.SYMBOL,row, item, y, kt)
+        }
+
+        return Layout( noOfRow, this.topRow, items, LayoutType.SYMBOL , layoutListener = listener)
+    }
+
     private fun updateItem(layoutType: LayoutType, row:Row, item:Item, y:Int, kt:KeyType){
-        if(item.isSpace(currentLayoutType)){
+        if(item.isSpace(layoutType)){
             row.update(y, key="", weight = kt.weight)
         }
-        else if(item.isBackSpace(currentLayoutType)){
+        else if(item.isBackSpace(layoutType)){
             row.update(y, weight = kt.weight, bitmaps = mutableListOf( readBitmap(R.drawable.backspace) ) )
         }
-        else if(item.isNext(currentLayoutType)){
+        else if(item.isNext(layoutType)){
             row.update(y,
                 weight = kt.weight,
                 bitmaps = mutableListOf( readBitmap(R.drawable.right_arrow) )
             )
         }
-        else if(layoutType == LayoutType.MAIN && item.isCaps(currentLayoutType)){
+        else if(item.isCaps(layoutType)){
             row.update(y,
                 weight = kt.weight,
                 bitmaps = mutableListOf( readBitmap(R.drawable.arrow_up_normal), readBitmap(R.drawable.arrow_up_filled) )
             )
         }
-        else if(item.isCharDig(currentLayoutType)){
+        else if(item.isCharDig(layoutType)){
             row.update(y,
                 weight = kt.weight,
                 bitmaps = mutableListOf( readBitmap(R.drawable.ic_char), readBitmap(R.drawable.ic_digit) )
             )
         }
-        else if(layoutType == LayoutType.DIGIT_SYMBOL && item.isSymbolSwitch(currentLayoutType)){
+        else if(item.isSymbolSwitch(layoutType)){
             row.update(y,
                 weight = kt.weight,
                 bitmaps = mutableListOf( readBitmap(R.drawable.ic_more) )
