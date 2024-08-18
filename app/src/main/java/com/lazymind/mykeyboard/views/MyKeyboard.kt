@@ -46,9 +46,6 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     private var isReady = false
     private var layoutType:LayoutType = LayoutType.MAIN
 
-    private var row:Row? = null
-    private var specialRow:SpecialRow? = null
-
     constructor(context: Context?):this(context, null)
 
     init {
@@ -106,40 +103,39 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         // First special row
         if(isSuggestionShowing){
-            specialRow = getLayout().topRow // row = topRow
+            val specialRow = getLayout().topRow // row = topRow
 
-            for(y in 0 until specialRow!!.size){
-                val item = specialRow!!.get(y)
+            for(y in 0 until specialRow.size){
+                val item = specialRow.get(y)
 
-                if(y < specialRow!!.size-1){
-                    canvas.drawLine(
-                        item.borderRect.right,
-                        item.borderRect.top,
-                        item.borderRect.right,
-                        item.borderRect.bottom,
-                        specialRow!!.paint
-                    )
-                }
+                //canvas.drawRoundRect( item.borderRect,RX, RY, specialRow.backPaint )
+                canvas.drawLine(
+                    item.borderRect.right,
+                    specialRow.lineTopPoint,
+                    item.borderRect.right,
+                    specialRow.lineBottomPoint,
+                    specialRow.backPaint
+                )
 
                 canvas.drawText(
-                    if(getLayout().isCapsModeOn) specialRow!!.suggestions[y].uppercase() else specialRow!!.suggestions[y],
+                    if(getLayout().isCapsModeOn) specialRow.suggestions[y].uppercase() else specialRow.suggestions[y],
                     item.borderRect.left + (item.borderRect.width() - item.textWidth) / 2,
                     item.borderRect.bottom - (item.borderRect.height() - item.textHeight) / 2,
-                    specialRow!!.paint
+                    specialRow.textPaint
                 )
             }
         }
 
         // 0-all if suggestion is not showing else 1-all
         for(x in (if(isSuggestionShowing) 1 else 0) until getLayout().noOfRow){
-            row = getLayout().items[x]
+            val row = getLayout().items[x]
 
-            for(y in 0 until row!!.size){
-                val item = row!!.get(y)
+            for(y in 0 until row.size){
+                val item = row.get(y)
 
                 canvas.drawRoundRect(item.borderRect, RX, RY, itemBackPaint)
-                if(row!!.hasIcon(y)){
-                    getLayout().getIconFor(row!!,y,layoutType).let { canvas.drawBitmap(it!!,null, item.iconRect, wholeBackPaint) }
+                if(row.hasIcon(y)){
+                    getLayout().getIconFor(row,y,layoutType).let { canvas.drawBitmap(it!!,null, item.iconRect, wholeBackPaint) }
                 }
                 else {
                     canvas.drawText(
@@ -437,7 +433,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
     fun showSuggestion(words:Array<String>){
         isSuggestionShowing = true
-        specialRow?.update(words)
+        topRow.update(words)
         invalidate()
     }
 

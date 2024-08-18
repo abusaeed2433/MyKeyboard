@@ -2,19 +2,24 @@ package com.lazymind.mykeyboard.classes;
 
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
 public class SpecialRow extends Row{
 
+    private static final float LINE_HEIGHT = .5f;
+
     private static SpecialRow instance = null;
-    public final Paint paint;
+    public final Paint textPaint;
+    public final Paint backPaint;
     private final float textSizeRatio; // 1sp = textSizeRatio dp
 
     public final String[] suggestions;
+    private float lineTopPoint = -1f;
+    private float lineBottomPoint = -1f;
 
     public static SpecialRow getInstance(float textSizeRatio, int rowNo, @NonNull ArrayList<Item> items, @NonNull GapType gapType){
         if(instance == null){
@@ -28,15 +33,48 @@ public class SpecialRow extends Row{
         super(rowNo, items, gapType);
         this.textSizeRatio = textSizeRatio;
 
-        paint = new Paint();
-        paint.setColor(Color.BLACK);
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setTextSize(textSizeRatio*20f); // 20sp
+        textPaint = new Paint();
+        backPaint = new Paint();
+
+        textPaint.setColor(Color.BLACK);
+        textPaint.setStrokeCap(Paint.Cap.ROUND);
+        textPaint.setTextSize(textSizeRatio*20f); // 20sp
+
+        backPaint.setColor(Color.GRAY);
+
         suggestions = new String[]{"x","-","-","-"};
     }
 
+    public float getLineTopPoint(){
+        if(lineTopPoint == -1f){
+            lineTopPoint = get(0).getBaseRect().top + get(0).getBaseRect().height() * (1 - LINE_HEIGHT)/2f;
+        }
+
+        System.out.println("bottom point: "+lineTopPoint);
+        return lineTopPoint;
+    }
+
+    public float getLineBottomPoint(){
+        if(lineBottomPoint == -1f){
+            lineBottomPoint = get(0).getBaseRect().bottom - get(0).getBaseRect().height() * (1 - LINE_HEIGHT)/2f;
+            System.out.println("Calc point: "+get(0).getBaseRect().bottom +", "+get(0).getBaseRect().height());
+        }
+
+        System.out.println("bottom point: "+lineBottomPoint);
+        return lineBottomPoint;
+    }
+
     public void update(String[] words){
-        System.arraycopy(words, 0, suggestions, 0, words.length);
+        Rect bounds = new Rect();
+
+        for(int i=0; i<words.length; i++){
+            suggestions[i] = words[i];
+            float textWidth = textPaint.measureText(words[i]);
+            textPaint.getTextBounds(words[i], 0, words[i].length(), bounds);
+            float textHeight = bounds.height();
+
+            get(i).updateTextWidthHeight(textWidth, textHeight);
+        }
     }
 
 }

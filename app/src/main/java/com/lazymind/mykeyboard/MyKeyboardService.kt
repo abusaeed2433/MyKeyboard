@@ -1,6 +1,7 @@
 package com.lazymind.mykeyboard
 
 import android.inputmethodservice.InputMethodService
+import android.provider.UserDictionary
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
@@ -65,8 +66,13 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
         val lastSpaceIndex = seq.lastIndexOf(" ")
         val word = seq.substring(lastSpaceIndex+1)
 
+//        val dictionary = UserDictionary()
+//        UserDictionary.Words.addWord()
+
         inputConnection.deleteSurroundingText( word.length, 0)
         inputConnection.commitText("$str ",0)
+
+        processWord(inputConnection, showNextWord = true)
     }
 
     private fun processWord(inputConnection: InputConnection,showNextWord:Boolean = false){
