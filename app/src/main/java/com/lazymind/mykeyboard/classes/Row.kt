@@ -6,6 +6,7 @@ open class Row(val rowNo:Int, val items:ArrayList<Item>, val gapType: GapType) {
 
     val size = items.size
     var totalWeight:Int = 0
+    var height:Float = 0f
 
     init {
         for(item in items){

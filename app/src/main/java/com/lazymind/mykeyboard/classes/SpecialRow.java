@@ -40,7 +40,7 @@ public class SpecialRow extends Row{
         textPaint.setStrokeCap(Paint.Cap.ROUND);
         textPaint.setTextSize(textSizeRatio*20f); // 20sp
 
-        backPaint.setColor(Color.GRAY);
+        backPaint.setColor(Color.rgb(189, 234, 240));
 
         suggestions = new String[]{"x","-","-","-"};
     }
@@ -66,6 +66,7 @@ public class SpecialRow extends Row{
 
     public void update(String[] words){
         Rect bounds = new Rect();
+        Paint.FontMetrics fm = textPaint.getFontMetrics();
 
         for(int i=0; i<words.length; i++){
             suggestions[i] = words[i];

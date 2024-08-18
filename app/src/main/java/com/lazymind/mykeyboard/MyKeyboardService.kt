@@ -86,7 +86,7 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
         val lastSpaceIndex = seq.lastIndexOf(" ")
 
         val word = seq.substring(lastSpaceIndex+1)
-        if(word.length == 1) myKeyboard.showSuggestion(arrayOf("x","-","-","-"))
+        if(word.length == 1) myKeyboard.showSuggestion(arrayOf("x","","",""))
         if(word.length < 2) return
 
         println("Using for suggestion: $word")
@@ -111,7 +111,7 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
 
             return arrayOf("x", topMatches[0], topMatches[1], topMatches[2])
         }catch (_:Exception){
-            return arrayOf("x","-","-","-")
+            return arrayOf("x","","","")
         }
     }
 
