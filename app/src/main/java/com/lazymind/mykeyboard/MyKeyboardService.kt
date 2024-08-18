@@ -111,7 +111,7 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
 
     private val lines = mutableListOf<String>()
     private fun readWords(){
-        val inputStream = resources.openRawResource(R.raw.words_two)
+        val inputStream = resources.openRawResource(R.raw.common_words)
         val bufferedReader = BufferedReader(InputStreamReader(inputStream))
 
         bufferedReader.useLines { lines.addAll(it) }
