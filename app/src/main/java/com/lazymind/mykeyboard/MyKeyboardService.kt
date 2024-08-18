@@ -6,6 +6,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import com.lazymind.mykeyboard.classes.Item
+import com.lazymind.mykeyboard.classes.LayoutType
 import com.lazymind.mykeyboard.views.MyKeyboard
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -26,12 +27,12 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
         return myKeyboard
     }
 
-    override fun onKeyClicked(item: Item, isCapsModeOn:Boolean) {
+    override fun onKeyClicked(layoutType: LayoutType,item: Item, isCapsModeOn:Boolean) {
 
-        if(item.isCaps()) return
+        if(item.isCaps(layoutType)) return
         val inputConnection = currentInputConnection
 
-        if(item.isBackSpace()){
+        if(item.isBackSpace(layoutType)){
             val seq:CharSequence? = inputConnection.getSelectedText(0)
 
             if(seq.isNullOrBlank()){ // delete the last text
@@ -42,11 +43,11 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
             }
             processWord(inputConnection)
         }
-        else if(item.isSpace()){
+        else if(item.isSpace(layoutType)){
             inputConnection.commitText(" ",1)
             processWord(inputConnection,showNextWord = true)
         }
-        else if(item.isNext()){
+        else if(item.isNext(layoutType)){
             handleEditorAction(inputConnection, currentInputEditorInfo)
         }
         else {

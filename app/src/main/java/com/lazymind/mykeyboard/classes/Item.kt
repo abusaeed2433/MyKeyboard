@@ -59,9 +59,36 @@ class Item( val x:Int, val y:Int, var key:String,
     }
 
     // Can call these ones
-    fun isBackSpace():Boolean{  return (x == KeyType.BACKSPACE.x && y == KeyType.BACKSPACE.y)  }
-    fun isSpace():Boolean{  return (x == KeyType.SPACE.x && y == KeyType.SPACE.y)  }
-    fun isCaps():Boolean{  return (x == KeyType.CAPS.x && y == KeyType.CAPS.y)  }
-    fun isNext():Boolean{  return (x == KeyType.NEXT.x && y == KeyType.NEXT.y)  }
-    fun isCharDig():Boolean{ return (x == KeyType.CHAR_DIG.x && y == KeyType.CHAR_DIG.y) }
+    fun isBackSpace(layoutType: LayoutType):Boolean{
+        if(KeyType.BACKSPACE.doesHave(layoutType))
+            return (x == KeyType.BACKSPACE.x && y == KeyType.BACKSPACE.y)
+        return false
+    }
+    fun isSpace(layoutType: LayoutType):Boolean{
+        if(KeyType.SPACE.doesHave(layoutType))
+            return (x == KeyType.SPACE.x && y == KeyType.SPACE.y)
+        return false
+    }
+    fun isCaps(layoutType: LayoutType):Boolean{
+        if(KeyType.CAPS.doesHave(layoutType))
+            return (x == KeyType.CAPS.x && y == KeyType.CAPS.y)
+        return false
+    }
+    fun isNext(layoutType: LayoutType):Boolean{
+        if(KeyType.NEXT.doesHave(layoutType))
+            return (x == KeyType.NEXT.x && y == KeyType.NEXT.y)
+        return false
+    }
+    fun isCharDig(layoutType: LayoutType):Boolean{
+        if(KeyType.CHAR_DIG.doesHave(layoutType))
+            return (x == KeyType.CHAR_DIG.x && y == KeyType.CHAR_DIG.y)
+        return false
+    }
+
+    fun isSymbolSwitch(layoutType: LayoutType):Boolean{
+        if(KeyType.SYMBOL_SWITCH.doesHave(layoutType)) {
+            return (x == KeyType.SYMBOL_SWITCH.x && y == KeyType.SYMBOL_SWITCH.y)
+        }
+        return false
+    }
 }

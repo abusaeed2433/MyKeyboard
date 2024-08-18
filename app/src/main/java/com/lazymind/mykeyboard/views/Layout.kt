@@ -30,7 +30,7 @@ class Layout(
     fun getSpecialId(x:Float, y:Float):Item?{
         for(item in topRow.items){
             if(item.baseRect.contains(x,y)) {
-                if(item.isCaps()){
+                if(item.isCaps(this.layoutType)){
                     isCapsModeOn = !isCapsModeOn
                     layoutListener.onRefreshRequest()
                 }
@@ -44,7 +44,7 @@ class Layout(
         for(row in  items){
             for(item in row.items){
                 if(item.baseRect.contains(x,y)) {
-                    if(item.isCaps()){
+                    if(item.isCaps(this.layoutType)){
                         isCapsModeOn = !isCapsModeOn
                         layoutListener.onRefreshRequest()
                     }
@@ -57,10 +57,10 @@ class Layout(
 
     fun getIconFor(row:Row, y:Int, type: LayoutType):Bitmap?{
         val item = row.get(y)
-        if(item.isCaps() && isCapsModeOn){
+        if(item.isCaps(this.layoutType) && isCapsModeOn){
             return row.getBitmapAtIndex(y,1)
         }
-        if(item.isCharDig() && type != LayoutType.MAIN){
+        if(item.isCharDig(this.layoutType) && type != LayoutType.MAIN){
             return row.getBitmapAtIndex(y,1)
         }
         return row.getBitmapAtIndex(y,0)

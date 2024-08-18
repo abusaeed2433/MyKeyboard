@@ -1,5 +1,5 @@
 package com.lazymind.mykeyboard.classes
 
 enum class LayoutType {
-    MAIN, SECONDARY, COMMON, TOP_ROW
+    MAIN, DIGIT_SYMBOL, SYMBOL, COMMON, TOP_ROW
 }

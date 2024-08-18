@@ -42,10 +42,10 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     private val mainLayout: Layout
     private val secondLayout: Layout
 
-    private var isMainLayoutShowing = true
+    private var currentLayoutType:LayoutType = LayoutType.MAIN
     private var isSuggestionShowing = false
     private var isReady = false
-    private var layoutType:LayoutType = LayoutType.MAIN
+    //private var layoutType:LayoutType = LayoutType.MAIN
 
     constructor(context: Context?):this(context, null)
 
@@ -59,7 +59,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         this.topRow = getTopRow()
         this.mainLayout = mainLayout(listener)
-        this.secondLayout = secondLayout(listener)
+        this.secondLayout = digitSymbol(listener)
 
         init()
     }
@@ -141,7 +141,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
                 canvas.drawRoundRect(item.borderRect, RX, RY, itemBackPaint)
                 if(row.hasIcon(y)){
-                    getLayout().getIconFor(row,y,layoutType).let { canvas.drawBitmap(it!!,null, item.iconRect, wholeBackPaint) }
+                    getLayout().getIconFor(row,y,currentLayoutType).let { canvas.drawBitmap(it!!,null, item.iconRect, wholeBackPaint) }
                 }
                 else {
                     canvas.drawText(
@@ -291,7 +291,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     }
 
     private fun getLayout():Layout{
-        return if(isMainLayoutShowing) mainLayout else secondLayout
+        return if(currentLayoutType == LayoutType.MAIN) mainLayout else secondLayout
     }
 
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
@@ -309,14 +309,19 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 return true
             }
 
-            if(item.isCharDig()){
-                layoutType = if(isMainLayoutShowing) LayoutType.SECONDARY else LayoutType.MAIN
-                isMainLayoutShowing = !isMainLayoutShowing
+            if(item.isCharDig(currentLayoutType)){
+                currentLayoutType = if(currentLayoutType == LayoutType.MAIN ) LayoutType.DIGIT_SYMBOL else LayoutType.MAIN
                 invalidate()
                 return true
             }
 
-            listener?.onKeyClicked(item, getLayout().isCapsModeOn)
+            if(item.isSymbolSwitch(currentLayoutType)){
+                currentLayoutType = if(currentLayoutType == LayoutType.DIGIT_SYMBOL) LayoutType.SYMBOL else LayoutType.DIGIT_SYMBOL
+                invalidate()
+                return true
+            }
+
+            listener?.onKeyClicked(currentLayoutType,item, getLayout().isCapsModeOn)
         }
         return super.dispatchTouchEvent(event)
     }
@@ -364,68 +369,76 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             val x = kt.x
             val y = kt.y
 
-            if(kt.layoutType != LayoutType.MAIN && kt.layoutType != LayoutType.COMMON) continue
+            if(!kt.doesHave(LayoutType.MAIN)) continue
+//            if(kt.layoutTypes != LayoutType.MAIN && kt.layoutTypes != LayoutType.COMMON) continue
 
             if(x == -1 || y == -1) continue
 
             val row = items[x]
             val item = row.get(y)
-            updateItem(row, item, y,kt)
+            updateItem(LayoutType.MAIN,row, item, y,kt)
         }
 
         return Layout(noOfRow, this.topRow, items, LayoutType.MAIN , layoutListener = listener)
     }
 
-    private fun secondLayout(listener: Layout.LayoutListener):Layout{
+    private fun digitSymbol(listener: Layout.LayoutListener):Layout{
         val noOfRow = 5
         val items = ArrayList<Row>()
 
         items.add(this.mainLayout.items[0]) // reusing first special row
-        items.add(calcBasicRows(LayoutType.SECONDARY,1,10,"1234567890"))
-        items.add(calcBasicRows(LayoutType.SECONDARY,2,10,"@#\$_&-+()/", gapType = GapType.START_END))
-        items.add(calcBasicRows(LayoutType.SECONDARY,3,9,"=*\"':;!?_", gapType = GapType.NO_START_END_GAP))
-        items.add(calcBasicRows(LayoutType.SECONDARY,4,5,"_,_._", gapType = GapType.NO_START_END_GAP))
+        items.add(calcBasicRows(LayoutType.DIGIT_SYMBOL,1,10,"1234567890"))
+        items.add(calcBasicRows(LayoutType.DIGIT_SYMBOL,2,10,"@#\$_&-+()/", gapType = GapType.START_END))
+        items.add(calcBasicRows(LayoutType.DIGIT_SYMBOL,3,9,"_*\"':;!?_", gapType = GapType.NO_START_END_GAP))
+        items.add(calcBasicRows(LayoutType.DIGIT_SYMBOL,4,5,"_,_._", gapType = GapType.NO_START_END_GAP))
 
         // updating special item
         for(kt in KeyType.entries){
             val x = kt.x
             val y = kt.y
 
-            if(kt.layoutType != LayoutType.SECONDARY && kt.layoutType != LayoutType.COMMON) continue
+            if(!kt.doesHave(LayoutType.DIGIT_SYMBOL)) continue
+            //if(kt.layoutTypes != LayoutType.DIGIT_SYMBOL && kt.layoutTypes != LayoutType.COMMON) continue
 
             if(x == -1 || y == -1) continue
 
             val row = items[x]
             val item = row.get(y)
-            updateItem(row, item, y, kt)
+            updateItem(LayoutType.DIGIT_SYMBOL,row, item, y, kt)
         }
 
-        return Layout( noOfRow, this.topRow, items, LayoutType.MAIN , layoutListener = listener)
+        return Layout( noOfRow, this.topRow, items, LayoutType.DIGIT_SYMBOL , layoutListener = listener)
     }
 
-    private fun updateItem(row:Row, item:Item, y:Int, kt:KeyType){
-        if(item.isSpace()){
+    private fun updateItem(layoutType: LayoutType, row:Row, item:Item, y:Int, kt:KeyType){
+        if(item.isSpace(currentLayoutType)){
             row.update(y, key="", weight = kt.weight)
         }
-        else if(item.isBackSpace()){
+        else if(item.isBackSpace(currentLayoutType)){
             row.update(y, weight = kt.weight, bitmaps = mutableListOf( readBitmap(R.drawable.backspace) ) )
         }
-        else if(item.isNext()){
+        else if(item.isNext(currentLayoutType)){
             row.update(y,
                 weight = kt.weight,
                 bitmaps = mutableListOf( readBitmap(R.drawable.right_arrow) )
             )
         }
-        else if(item.isCaps()){
+        else if(layoutType == LayoutType.MAIN && item.isCaps(currentLayoutType)){
             row.update(y,
                 weight = kt.weight,
                 bitmaps = mutableListOf( readBitmap(R.drawable.arrow_up_normal), readBitmap(R.drawable.arrow_up_filled) )
             )
         }
-        else if(item.isCharDig()){
+        else if(item.isCharDig(currentLayoutType)){
             row.update(y,
                 weight = kt.weight,
                 bitmaps = mutableListOf( readBitmap(R.drawable.ic_char), readBitmap(R.drawable.ic_digit) )
+            )
+        }
+        else if(layoutType == LayoutType.DIGIT_SYMBOL && item.isSymbolSwitch(currentLayoutType)){
+            row.update(y,
+                weight = kt.weight,
+                bitmaps = mutableListOf( readBitmap(R.drawable.ic_more) )
             )
         }
         else{
@@ -462,7 +475,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
     private fun getKeyType(layoutType: LayoutType, x:Int, y:Int):KeyType{
         for(type in KeyType.entries){
-            if(type.layoutType == layoutType && type.x == x && type.y == y) return type
+            if(type.doesHave(layoutType)) return type
+            //if(type.layoutTypes == layoutType && type.x == x && type.y == y) return type
         }
         return KeyType.NORMAL
     }
@@ -472,7 +486,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     }
 
     interface MyKeyboardListener {
-        fun onKeyClicked(item: Item, isCapsModeOn:Boolean)
+        fun onKeyClicked(layoutType: LayoutType,item: Item, isCapsModeOn:Boolean)
         fun onSpecialClicked(str: String, isCapsModeOn:Boolean)
     }
 
