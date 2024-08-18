@@ -6,12 +6,14 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import com.lazymind.mykeyboard.classes.Item
 import com.lazymind.mykeyboard.views.MyKeyboard
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import kotlin.random.Random
 
 
 class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
 
     private lateinit var myKeyboard: MyKeyboard
-    private lateinit var inputConnection:InputConnection
 
     override fun onCreateInputView(): View {
         myKeyboard =  MyKeyboard(this)
@@ -19,13 +21,14 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
 
         window.window?.navigationBarColor = resources.getColor(R.color.keyboard_back,null)
 
-        inputConnection = currentInputConnection
+        readWords()
         return myKeyboard
     }
 
     override fun onKeyClicked(item: Item, isCapsModeOn:Boolean) {
 
         if(item.isCaps()) return
+        val inputConnection = currentInputConnection
 
         if(item.isBackSpace()){
             val seq:CharSequence? = inputConnection.getSelectedText(0)
@@ -36,11 +39,11 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
             else { // delete the selected text
                 inputConnection.deleteSurroundingText(0, 0)
             }
-            processWord()
+            processWord(inputConnection)
         }
         else if(item.isSpace()){
             inputConnection.commitText(" ",1)
-            processWord(showNextWord = true)
+            processWord(inputConnection,showNextWord = true)
         }
         else if(item.isNext()){
             handleEditorAction(inputConnection, currentInputEditorInfo)
@@ -50,13 +53,25 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
                 if(isCapsModeOn) item.key.uppercase() else item.key.lowercase(),
                 1
             )
-            processWord()
+            processWord(inputConnection)
         }
     }
 
-    private fun processWord(showNextWord:Boolean = false){
+    override fun onSpecialClicked(str: String, isCapsModeOn: Boolean) {
+        val inputConnection = currentInputConnection
+
+        val seq = inputConnection.getTextBeforeCursor(30, 0) ?: return
+
+        val lastSpaceIndex = seq.lastIndexOf(" ")
+        val word = seq.substring(lastSpaceIndex+1)
+
+        inputConnection.deleteSurroundingText( word.length, 0)
+        inputConnection.commitText("$str ",0)
+    }
+
+    private fun processWord(inputConnection: InputConnection,showNextWord:Boolean = false){
         if(showNextWord){ // select 3 probable words and show them
-            myKeyboard.showSuggestion(arrayOf("x","dd","ad","dd"))
+            myKeyboard.showSuggestion(getSuggestion(null))
             return
         }
 
@@ -66,10 +81,63 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
 
         val word = seq.substring(lastSpaceIndex+1)
         if(word.length == 1) myKeyboard.showSuggestion(arrayOf("x","-","-","-"))
-        if(word.length < 3) return
+        if(word.length < 2) return
 
-        myKeyboard.showSuggestion(arrayOf("x","a","b","c"))
-        // show 3 suggestions
+        println("Using for suggestion: $word")
+        myKeyboard.showSuggestion( getSuggestion(word))
+    }
+
+    private fun getSuggestion(str:String?):Array<String>{
+        try {
+            if (str == null) {
+                val random = java.util.Random()
+                val i = random.nextInt(lines.size - 1)
+                val j = random.nextInt(lines.size - 1)
+                val k = random.nextInt(lines.size - 1)
+
+                return arrayOf("x", lines[i], lines[j], lines[k])
+            }
+            val topMatches = lines
+                .map { it to levenshteinDistance(str, it) }
+                .sortedBy { it.second }
+                .take(3)
+                .map { it.first }
+
+            return arrayOf("x", topMatches[0], topMatches[1], topMatches[2])
+        }catch (_:Exception){
+            return arrayOf("x","-","-","-")
+        }
+    }
+
+    private val lines = mutableListOf<String>()
+    private fun readWords(){
+        val inputStream = resources.openRawResource(R.raw.words_two)
+        val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+
+        bufferedReader.useLines { lines.addAll(it) }
+    }
+
+    private fun levenshteinDistance(s1: String, s2: String): Int {
+        val dp = Array(s1.length + 1) { IntArray(s2.length + 1) }
+
+        for (i in 0..s1.length) {
+            for (j in 0..s2.length) {
+                when {
+                    i == 0 -> dp[i][j] = j
+                    j == 0 -> dp[i][j] = i
+                    else -> {
+                        val cost = if (s1[i - 1] == s2[j - 1]) 0 else 1
+                        dp[i][j] = minOf(
+                            dp[i - 1][j] + 1,
+                            dp[i][j - 1] + 1,
+                            dp[i - 1][j - 1] + cost
+                        )
+                    }
+                }
+            }
+        }
+
+        return dp[s1.length][s2.length]
     }
 
     private fun handleEditorAction(inputConnection: InputConnection, editorInfo: EditorInfo) {

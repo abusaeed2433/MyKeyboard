@@ -277,7 +277,18 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
         if(event?.action == MotionEvent.ACTION_DOWN){
-            val item:Item = getItemAt(event.x, event.y) ?: return true
+            val pair:Pair<Item,Boolean> = getItemAt(event.x, event.y) ?: return true
+            val item = pair.first
+
+            if(pair.second){ // special
+                if(item.y == 0){
+                    isSuggestionShowing = false
+                    invalidate()
+                    return true
+                }
+                listener?.onSpecialClicked(topRow.suggestions[item.y], getLayout().isCapsModeOn)
+                return true
+            }
 
             if(item.isCharDig()){
                 layoutType = if(isMainLayoutShowing) LayoutType.SECONDARY else LayoutType.MAIN
@@ -291,9 +302,15 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         return super.dispatchTouchEvent(event)
     }
 
-    private fun getItemAt(x: Float, y: Float): Item? {
+    private fun getItemAt(x: Float, y: Float): Pair<Item,Boolean>? {
+        val spec = getLayout().getSpecialId(x,y)
+
+        if(spec != null){
+            return Pair(spec,true)
+        }
+
         val item = getLayout().getHolderId(x,y) ?: return null
-        return item
+        return Pair(item,false)
     }
 
     // Layout initializer
@@ -437,6 +454,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
     interface MyKeyboardListener {
         fun onKeyClicked(item: Item, isCapsModeOn:Boolean)
+        fun onSpecialClicked(str: String, isCapsModeOn:Boolean)
     }
 
 }

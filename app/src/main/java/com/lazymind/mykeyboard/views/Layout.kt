@@ -27,6 +27,19 @@ class Layout(
         maxWeight = localMax
     }
 
+    fun getSpecialId(x:Float, y:Float):Item?{
+        for(item in topRow.items){
+            if(item.baseRect.contains(x,y)) {
+                if(item.isCaps()){
+                    isCapsModeOn = !isCapsModeOn
+                    layoutListener.onRefreshRequest()
+                }
+                return item
+            }
+        }
+        return null
+    }
+
     fun getHolderId(x:Float, y:Float):Item?{
         for(row in  items){
             for(item in row.items){
