@@ -10,7 +10,7 @@ class Item( val x:Int, val y:Int, var key:String,
     var bitmaps:MutableList<Bitmap> = ArrayList()
 ){
     companion object{
-        private const val ICON_PAD_GAP = .20f // 20%
+        private const val ICON_PAD_GAP = .10f // 20%
         private const val BORDER_GAP = 0.06f
     }
 

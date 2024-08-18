@@ -133,7 +133,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 }
 
                 canvas.drawText(
-                    if(getLayout().isCapsModeOn) specialRow.suggestions[y].uppercase() else specialRow.suggestions[y],
+                    if(getLayout().shouldMakeUpper()) specialRow.suggestions[y].uppercase() else specialRow.suggestions[y],
                     item.borderRect.left + (item.borderRect.width() - item.textWidth) / 2,
                     item.borderRect.bottom - (item.borderRect.height() - item.textHeight) / 2,
                     specialRow.textPaint
@@ -154,7 +154,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 }
                 else {
                     canvas.drawText(
-                        if(getLayout().isCapsModeOn) item.key.uppercase() else item.key,
+                        if(getLayout().shouldMakeUpper()) item.key.uppercase() else item.key,
                         item.borderRect.left + (item.borderRect.width() - item.textWidth) / 2,
                         item.borderRect.bottom - (item.borderRect.height() - item.textHeight) / 2,
                         textPaint
@@ -240,7 +240,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 val textWidth = textPaint.measureText(item.key)
                 val bounds = Rect()
                 textPaint.getTextBounds(item.key, 0, item.key.length, bounds)
-                val textHeight = bounds.height()
+                val textHeight = bounds.height()- bounds.bottom
 
                 row.updateTextWidthHeight(col, textWidth, textHeight.toFloat())
                 row.updateRectAndIcon(col, coorX, coorY, coorX + (keyWidth * item.weight), coorY+row.height)
@@ -318,7 +318,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                     invalidate()
                     return true
                 }
-                listener?.onSpecialClicked(topRow.suggestions[item.y], getLayout().isCapsModeOn)
+                listener?.onSpecialClicked(topRow.suggestions[item.y], getLayout().shouldMakeUpper())
                 return true
             }
 
@@ -334,7 +334,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 return true
             }
 
-            listener?.onKeyClicked(currentLayoutType,item, getLayout().isCapsModeOn)
+            listener?.onKeyClicked(currentLayoutType,item, getLayout().shouldMakeUpper())
         }
         return super.dispatchTouchEvent(event)
     }
@@ -365,6 +365,10 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
         val textSizeF = context.resources.getDimension(R.dimen.key_size)
         return SpecialRow.getInstance(textSizeF/25,0,items, GapType.EVENLY) // 25sp see dimen.xml
+    }
+
+    fun updateCapsModeIfNeeded(){
+        getLayout().updateCapsModeIfNext()
     }
 
     private fun mainLayout(listener: Layout.LayoutListener):Layout{
@@ -466,7 +470,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         else if(item.isCaps(layoutType)){
             row.update(y,
                 weight = kt.weight,
-                bitmaps = mutableListOf( readBitmap(R.drawable.arrow_up_normal), readBitmap(R.drawable.arrow_up_filled) )
+                bitmaps = iconGenerator.getIconFor(KeyType.CAPS)
+                //bitmaps = mutableListOf( readBitmap(R.drawable.arrow_up_normal), readBitmap(R.drawable.arrow_up_filled) )
             )
         }
         else if(item.isCharDig(layoutType)){

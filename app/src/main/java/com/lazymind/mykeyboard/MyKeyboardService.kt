@@ -55,6 +55,9 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
                 if(isCapsModeOn) item.key.uppercase() else item.key.lowercase(),
                 1
             )
+            if(isCapsModeOn){
+                myKeyboard.updateCapsModeIfNeeded()
+            }
             processWord(inputConnection)
         }
     }

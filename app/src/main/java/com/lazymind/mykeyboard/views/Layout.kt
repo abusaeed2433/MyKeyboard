@@ -15,7 +15,7 @@ class Layout(
     val layoutListener:LayoutListener
 ) {
 
-    var isCapsModeOn = false
+    var capsMode:CapsType = CapsType.OFF
     val maxWeight:Int
 
     init {
@@ -30,10 +30,6 @@ class Layout(
     fun getSpecialId(x:Float, y:Float):Item?{
         for(item in topRow.items){
             if(item.baseRect.contains(x,y)) {
-                if(item.isCaps(this.layoutType)){
-                    isCapsModeOn = !isCapsModeOn
-                    layoutListener.onRefreshRequest()
-                }
                 return item
             }
         }
@@ -45,7 +41,7 @@ class Layout(
             for(item in row.items){
                 if(item.baseRect.contains(x,y)) {
                     if(item.isCaps(this.layoutType)){
-                        isCapsModeOn = !isCapsModeOn
+                        switchCapsMode()
                         layoutListener.onRefreshRequest()
                     }
                     return item
@@ -55,10 +51,34 @@ class Layout(
         return null
     }
 
+    fun updateCapsModeIfNext(){
+        if(capsMode == CapsType.NEXT){
+            capsMode = CapsType.OFF
+            layoutListener.onRefreshRequest()
+        }
+    }
+
+    private fun switchCapsMode(){
+        capsMode = when(capsMode){
+            CapsType.OFF -> CapsType.NEXT
+            CapsType.NEXT -> CapsType.ON
+            CapsType.ON -> CapsType.OFF
+        }
+    }
+
+    fun shouldMakeUpper():Boolean{
+        return capsMode == CapsType.ON || capsMode == CapsType.NEXT
+    }
+
     fun getIconFor(row:Row, y:Int, type: LayoutType):Bitmap?{
         val item = row.get(y)
-        if(item.isCaps(this.layoutType) && isCapsModeOn){
-            return row.getBitmapAtIndex(y,1)
+        if(item.isCaps(this.layoutType)){
+            if(capsMode == CapsType.NEXT)
+                return row.getBitmapAtIndex(y,1)
+            if(capsMode == CapsType.ON)
+                return row.getBitmapAtIndex(y,2)
+
+            return row.getBitmapAtIndex(y,0)
         }
         if(item.isCharDig(this.layoutType) && type != LayoutType.MAIN){
             return row.getBitmapAtIndex(y,1)
@@ -74,5 +94,9 @@ class Layout(
 
     interface LayoutListener{
         fun onRefreshRequest()
+    }
+
+    enum class CapsType{
+        OFF, NEXT, ON
     }
 }
