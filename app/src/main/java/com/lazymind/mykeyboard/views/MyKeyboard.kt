@@ -111,17 +111,17 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             for(y in 0 until specialRow.size){
                 val item = specialRow.get(y)
 
-                canvas.drawRoundRect(item.borderRect, RX,RY, specialRow.backPaint)
+//                canvas.drawRoundRect(item.borderRect, RX,RY, specialRow.backPaint)
 
-//                if(y < specialRow.size-1) {
-//                    canvas.drawLine(
-//                        item.borderRect.right,
-//                        specialRow.lineTopPoint,
-//                        item.borderRect.right,
-//                        specialRow.lineBottomPoint,
-//                        specialRow.backPaint
-//                    )
-//                }
+                if(y < specialRow.size-1) {
+                    canvas.drawLine(
+                        item.borderRect.right,
+                        specialRow.lineTopPoint,
+                        item.borderRect.right,
+                        specialRow.lineBottomPoint,
+                        specialRow.backPaint
+                    )
+                }
 
                 canvas.drawText(
                     if(getLayout().isCapsModeOn) specialRow.suggestions[y].uppercase() else specialRow.suggestions[y],
