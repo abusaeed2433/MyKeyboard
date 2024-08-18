@@ -49,7 +49,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     private var currentLayoutType:LayoutType = LayoutType.MAIN
     private var isSuggestionShowing = false
     private var isReady = false
-    //private var layoutType:LayoutType = LayoutType.MAIN
+
+    private lateinit var iconGenerator: IconGenerator
 
     constructor(context: Context?):this(context, null)
 
@@ -61,6 +62,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             }
         }
 
+        this.iconGenerator = IconGenerator(context!!)
         this.topRow = getTopRow()
         this.mainLayout = mainLayout(listener)
         this.digitSymbolLayout = digitSymbol(listener)
@@ -470,7 +472,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         else if(item.isCharDig(layoutType)){
             row.update(y,
                 weight = kt.weight,
-                bitmaps = mutableListOf( readBitmap(R.drawable.ic_char), readBitmap(R.drawable.ic_digit) )
+                bitmaps = iconGenerator.getIconFor(KeyType.CHAR_DIG)
+                //bitmaps = mutableListOf( readBitmap(R.drawable.ic_char), readBitmap(R.drawable.ic_digit) )
             )
         }
         else if(item.isSymbolSwitch(layoutType)){

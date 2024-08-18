@@ -2,4 +2,6 @@
 <resources>
     <dimen name="key_size">25sp</dimen>
     <dimen name="row_gap">2dp</dimen>
+    <dimen name="icon_size">36dp</dimen>
+    <dimen name="icon_text_size">14sp</dimen>
 </resources>
