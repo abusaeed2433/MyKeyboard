@@ -24,8 +24,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
     companion object{
         const val TOP_GAP = 10
-        const val RX = 6f
-        const val RY = 6f
+        const val RX = 12f
+        const val RY = 12f
         const val LEFT_RIGHT_GAP = 0.01f // 2%
     }
 
