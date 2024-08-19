@@ -13,7 +13,7 @@ import com.lazymind.mykeyboard.classes.KeyType
 class IconGenerator(val context: Context) {
 
     companion object{
-        const val STROKE_WIDTH = 4f
+        const val STROKE_WIDTH = 6f
     }
 
     private val iconSize:Int
@@ -61,22 +61,23 @@ class IconGenerator(val context: Context) {
     }
 
     private fun createCapsIcon():MutableList<Bitmap> {
-//        val bitmapOne = createCapsArrow()
-//        val bitmapTwo = createFilledArrow()
-//        val bitmapThree = createFilledArrowWithLine()
+        val bitmapOne = createCapsArrow()
+        val bitmapTwo = createFilledArrow()
+        val bitmapThree = createFilledArrowWithLine()
 
 
-        val bitmapOne = drawText("caps")
-        val bitmapTwo = drawText("Caps")
-        val bitmapThree = drawText("CAPS")
+//        val bitmapOne = drawText("caps")
+//        val bitmapTwo = drawText("Caps")
+//        val bitmapThree = drawText("CAPS")
 
         return mutableListOf(bitmapOne, bitmapTwo, bitmapThree)
     }
 
     private fun createFilledArrowWithLine():Bitmap{
         resetPaint()
-        paint.style = Paint.Style.FILL
+        paint.strokeWidth = STROKE_WIDTH
         paint.strokeCap = Paint.Cap.ROUND
+        paint.style = Paint.Style.FILL_AND_STROKE
 
         val bitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -92,56 +93,63 @@ class IconGenerator(val context: Context) {
 
     private fun createFilledArrow():Bitmap{
         resetPaint()
-        paint.style = Paint.Style.FILL
+        paint.strokeWidth = STROKE_WIDTH
+        paint.strokeCap = Paint.Cap.ROUND
+        paint.style = Paint.Style.FILL_AND_STROKE
 
         val bitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
         val path = createArrowPath()
-
         canvas.drawPath(path, paint)
+
+        canvas.drawLine(calc(.40f),calc(.80f),calc(.60f),calc(0.80f),paint)
+
         return bitmap
     }
 
     private fun createCapsArrow():Bitmap{
         resetPaint()
         paint.strokeWidth = STROKE_WIDTH
+        paint.strokeCap = Paint.Cap.ROUND
 
         val bitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
         val path = createArrowPath()
         canvas.drawPath(path, paint)
+
+        canvas.drawLine(calc(.40f),calc(.80f),calc(.60f),calc(0.80f),paint)
+
         return bitmap
     }
 
     private fun createRectPath():Path {
         val path = Path()
 
-        path.moveTo(calc(.42f), calc(.85f))
-        path.lineTo(calc(.58f), calc(.85f))
-        path.lineTo(calc(.58f), calc(.90f))
-        path.lineTo(calc(.42f), calc(.90f))
-        path.lineTo(calc(.42f), calc(.85f))
+        path.moveTo(calc(.40f), calc(.70f)+STROKE_WIDTH)
+        path.lineTo(calc(.60f), calc(.70f)+STROKE_WIDTH)
+        path.lineTo(calc(.60f), calc(.80f)+STROKE_WIDTH)
+        path.lineTo(calc(.40f), calc(.80f)+STROKE_WIDTH)
+        path.lineTo(calc(.40f), calc(.70f)+STROKE_WIDTH)
 
         return path
     }
 
-
     private fun createArrowPath():Path {
         val path = Path()
-        path.moveTo( calc(.42f), calc(.80f))
+        path.moveTo( calc(.40f), calc(.65f))
 
-        path.lineTo( calc(.42f), calc(.50f))
+        path.lineTo( calc(.40f), calc(.45f))
 
-        path.lineTo( calc(.30f), calc(.50f))
-        path.lineTo( calc(.50f), calc(.20f))
+        path.lineTo( calc(.30f), calc(.45f))
+        path.lineTo( calc(.50f), calc(.25f))
 
-        path.lineTo( calc(.70f), calc(.50f))
-        path.lineTo( calc(.60f), calc(.50f))
+        path.lineTo( calc(.70f), calc(.45f))
+        path.lineTo( calc(.60f), calc(.45f))
 
-        path.lineTo( calc(.58f), calc(.80f))
-        path.lineTo( calc(.42f), calc(.80f))
+        path.lineTo( calc(.60f), calc(.65f))
+        path.lineTo( calc(.40f), calc(.65f))
 
         return path
     }
@@ -161,7 +169,7 @@ class IconGenerator(val context: Context) {
         val textWidth = paint.measureText(text)
 
         paint.getTextBounds(text, 0, text.length, rect)
-        val textHeight: Float = (rect.height() - 2 * rect.bottom).toFloat()
+        val textHeight: Float = (rect.height() - rect.bottom).toFloat()
 
         canvas.drawText(
             text,

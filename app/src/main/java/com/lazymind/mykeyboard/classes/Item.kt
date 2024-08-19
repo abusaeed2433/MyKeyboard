@@ -11,7 +11,7 @@ class Item( val x:Int, val y:Int, var key:String,
 ){
     companion object{
         private const val ICON_PAD_GAP = .10f // 20%
-        private const val BORDER_GAP = 0.06f
+        private const val BORDER_GAP = 0.03f
     }
 
     val baseRect: RectF = RectF() // used for checking click
