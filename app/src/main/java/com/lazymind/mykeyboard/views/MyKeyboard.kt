@@ -32,6 +32,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     private val textPaint: Paint = Paint()
     private val wholeBackPaint: Paint = Paint()
     private val itemBackPaint: Paint = Paint()
+    private val commandBackPaint: Paint = Paint()
 
     private var listener: MyKeyboardListener? = null
     private var keyWidth = 0f
@@ -83,6 +84,10 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         itemBackPaint.color = resources.getColor(R.color.key_back,null)
         itemBackPaint.strokeWidth = 1f
         itemBackPaint.strokeCap = Paint.Cap.ROUND
+
+        commandBackPaint.color = resources.getColor(R.color.command_key_back,null)
+        commandBackPaint.strokeWidth = 1f
+        commandBackPaint.strokeCap = Paint.Cap.ROUND
 
         viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
@@ -148,7 +153,12 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             for(y in 0 until row.size){
                 val item = row.get(y)
 
-                canvas.drawRoundRect(item.borderRect, RX, RY, itemBackPaint)
+                canvas.drawRoundRect(
+                    item.borderRect,
+                    RX, RY,
+                    if(item.keyType.isACommand()) commandBackPaint else itemBackPaint
+                )
+
                 if(row.hasIcon(y)){
                     getLayout().getIconFor(row,y,currentLayoutType).let { canvas.drawBitmap(it!!,null, item.iconRect, wholeBackPaint) }
                 }
@@ -528,8 +538,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
     private fun getKeyType(layoutType: LayoutType, x:Int, y:Int):KeyType{
         for(type in KeyType.entries){
-            if(type.doesHave(layoutType)) return type
-            //if(type.layoutTypes == layoutType && type.x == x && type.y == y) return type
+            if(type.doesHave(layoutType) && (type.x == x && type.y == y)) return type
         }
         return KeyType.NORMAL
     }
