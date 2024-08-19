@@ -13,7 +13,7 @@ import com.lazymind.mykeyboard.classes.KeyType
 class IconGenerator(val context: Context) {
 
     companion object{
-        const val STROKE_WIDTH = 6f
+        const val STROKE_WIDTH = 10f
     }
 
     private val iconSize:Int

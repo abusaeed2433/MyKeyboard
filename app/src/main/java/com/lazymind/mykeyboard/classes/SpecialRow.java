@@ -68,9 +68,9 @@ public class SpecialRow extends Row{
     public void update(String[] words){
         Rect bounds = new Rect();
         final float minTextSize = 8f;
-        float textSize = 16f * textSizeRatio;
+        float textSize = 20f * textSizeRatio; // 20sp
 
-        textPaint.setTextSize(16f*textSizeRatio);
+        textPaint.setTextSize(textSize);
         for(int i=0; i<words.length; i++){
             suggestions[i] = words[i];
             float textWidth = textPaint.measureText(words[i]);

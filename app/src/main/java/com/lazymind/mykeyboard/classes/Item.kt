@@ -10,8 +10,8 @@ class Item( val x:Int, val y:Int, var key:String,
     var bitmaps:MutableList<Bitmap> = ArrayList()
 ){
     companion object{
-        private const val ICON_PAD_GAP = .20f // 20%
-        private const val BORDER_GAP = 0.03f
+        private const val ICON_PAD_GAP = .10f // 10%
+        private const val BORDER_GAP = 0.04f
     }
 
     val baseRect: RectF = RectF() // used for checking click
