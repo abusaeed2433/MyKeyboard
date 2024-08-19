@@ -80,8 +80,15 @@ class Layout(
 
             return row.getBitmapAtIndex(y,0)
         }
+
         if(item.isCharDig(this.layoutType) && type != LayoutType.MAIN){
             return row.getBitmapAtIndex(y,1)
+        }
+
+        if(item.isSymbolSwitch(this.layoutType)){
+            if(this.layoutType == LayoutType.SYMBOL){
+                return row.getBitmapAtIndex(y,1)
+            }
         }
         return row.getBitmapAtIndex(y,0)
     }

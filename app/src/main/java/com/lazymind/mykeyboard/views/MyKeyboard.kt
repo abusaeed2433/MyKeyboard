@@ -484,7 +484,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         else if(item.isSymbolSwitch(layoutType)){
             row.update(y,
                 weight = kt.weight,
-                bitmaps = mutableListOf( readBitmap(R.drawable.ic_more) )
+                bitmaps = iconGenerator.getIconFor(KeyType.SYMBOL_SWITCH)
+//                bitmaps = mutableListOf( readBitmap(R.drawable.ic_more) )
             )
         }
         else{

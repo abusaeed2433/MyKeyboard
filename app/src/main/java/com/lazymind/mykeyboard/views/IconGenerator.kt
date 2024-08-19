@@ -44,8 +44,19 @@ class IconGenerator(val context: Context) {
         if(keyType == KeyType.CAPS){
             return createCapsIcon()
         }
+        if(keyType == KeyType.SYMBOL_SWITCH){
+            return createSymbolSwitchIcon()
+        }
 
         return mutableListOf()
+    }
+
+    private fun createSymbolSwitchIcon():MutableList<Bitmap>{
+
+        val bitmapOne = drawText("=\\<")
+        val bitmapTwo = drawText("?123")
+
+        return mutableListOf(bitmapOne, bitmapTwo)
     }
 
     private fun createCharDigIcon():MutableList<Bitmap>{
