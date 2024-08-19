@@ -48,7 +48,73 @@ class IconGenerator(val context: Context) {
             return createSymbolSwitchIcon()
         }
 
+        if(keyType == KeyType.BACKSPACE){
+            return createBackSpaceIcon()
+        }
+
+        if(keyType == KeyType.NEXT){
+            return createNextIcon()
+        }
+
         return mutableListOf()
+    }
+
+    private fun createNextIcon():MutableList<Bitmap>{
+        resetPaint()
+        paint.strokeWidth = STROKE_WIDTH
+        paint.strokeCap = Paint.Cap.ROUND
+        paint.style = Paint.Style.STROKE
+
+        val bitmap = Bitmap.createBitmap(iconSize,iconSize,Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+
+        val path = Path()
+        path.moveTo( calc(0.20f),calc(0.45f) )
+        path.lineTo( calc(0.60f),calc(0.45f) )
+
+        path.lineTo( calc(0.50f),calc(0.30f) )
+
+        path.lineTo( calc(0.75f), calc(0.50f) )
+        path.lineTo( calc(0.50f),calc(0.70f) )
+
+        path.lineTo( calc(0.60f),calc(0.55f) )
+        path.lineTo( calc(0.20f),calc(0.55f) )
+        path.lineTo( calc(0.20f),calc(0.45f) )
+
+        canvas.drawPath(path, paint)
+        return mutableListOf(bitmap)
+    }
+
+    private fun createBackSpaceIcon():MutableList<Bitmap>{
+
+        resetPaint()
+        paint.strokeWidth = STROKE_WIDTH
+        paint.strokeCap = Paint.Cap.ROUND
+        paint.style = Paint.Style.STROKE
+
+        val bitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
+
+        val canvas = Canvas(bitmap)
+
+        val path = Path()
+        path.moveTo( calc(0.20f), calc(0.50f) )
+        path.lineTo( calc(0.35f), calc(0.20f) )
+
+        path.lineTo( calc(0.85f), calc(0.20f) )
+        path.lineTo( calc(0.85f), calc(0.80f) )
+        path.lineTo( calc(0.35f), calc(0.80f) )
+
+        path.lineTo( calc(0.20f), calc(0.50f) )
+
+        path.moveTo( calc(0.50f), calc(0.35f) )
+        path.lineTo( calc(0.65f), calc(0.65f) )
+
+        path.moveTo( calc(0.65f), calc(0.35f) )
+        path.lineTo( calc(0.50f), calc(0.65f) )
+
+        canvas.drawPath(path, paint)
+
+        return mutableListOf(bitmap)
     }
 
     private fun createSymbolSwitchIcon():MutableList<Bitmap>{

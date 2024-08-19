@@ -459,12 +459,18 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
             row.update(y, key="", weight = kt.weight)
         }
         else if(item.isBackSpace(layoutType)){
-            row.update(y, weight = kt.weight, bitmaps = mutableListOf( readBitmap(R.drawable.backspace) ) )
+            row.update(
+                y,
+                weight = kt.weight,
+                bitmaps = iconGenerator.getIconFor(KeyType.BACKSPACE)
+                //bitmaps = mutableListOf( readBitmap(R.drawable.backspace) )
+            )
         }
         else if(item.isNext(layoutType)){
             row.update(y,
                 weight = kt.weight,
-                bitmaps = mutableListOf( readBitmap(R.drawable.right_arrow) )
+                bitmaps = iconGenerator.getIconFor(KeyType.NEXT)
+                //bitmaps = mutableListOf( readBitmap(R.drawable.right_arrow) )
             )
         }
         else if(item.isCaps(layoutType)){
