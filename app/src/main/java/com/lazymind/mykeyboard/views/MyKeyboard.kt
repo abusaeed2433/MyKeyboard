@@ -33,6 +33,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     private val wholeBackPaint: Paint = Paint()
     private val itemBackPaint: Paint = Paint()
     private val commandBackPaint: Paint = Paint()
+    private val clickedBackPaint: Paint = Paint()
 
     private var listener: MyKeyboardListener? = null
     private var keyWidth = 0f
@@ -51,7 +52,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     private var isSuggestionShowing = false
     private var isReady = false
 
-    private lateinit var iconGenerator: IconGenerator
+    private var iconGenerator: IconGenerator
+    private var clickedKey:Item? = null
 
     constructor(context: Context?):this(context, null)
 
@@ -88,6 +90,10 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         commandBackPaint.color = resources.getColor(R.color.command_key_back,null)
         commandBackPaint.strokeWidth = 1f
         commandBackPaint.strokeCap = Paint.Cap.ROUND
+
+        clickedBackPaint.color = resources.getColor(R.color.clicked_key_back,null)
+        clickedBackPaint.strokeWidth = 1f
+        clickedBackPaint.strokeCap = Paint.Cap.ROUND
 
         viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
@@ -156,7 +162,9 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 canvas.drawRoundRect(
                     item.borderRect,
                     RX, RY,
-                    if(item.keyType.isACommand()) commandBackPaint else itemBackPaint
+                    if(item.keyType.isACommand()) commandBackPaint else {
+                        if(item == clickedKey) clickedBackPaint else itemBackPaint
+                    }
                 )
 
                 if(row.hasIcon(y)){
@@ -319,7 +327,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
 
     override fun dispatchTouchEvent(event: MotionEvent?): Boolean {
         if(event?.action == MotionEvent.ACTION_DOWN){
-            val pair:Pair<Item,Boolean> = getItemAt(event.x, event.y) ?: return true
+            val pair:Pair<Item,Boolean> = getItemAt(event.x, event.y) ?: return false
             val item = pair.first
 
             if(pair.second){ // special
@@ -344,8 +352,21 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 return true
             }
 
+            clickedKey = item
+            invalidate()
+
             listener?.onKeyClicked(currentLayoutType,item, getLayout().shouldMakeUpper())
+            return true
         }
+
+        if(event?.action == MotionEvent.ACTION_UP){
+            postDelayed({
+                clickedKey = null
+                invalidate()
+            },100)
+            return true
+        }
+
         return super.dispatchTouchEvent(event)
     }
 
