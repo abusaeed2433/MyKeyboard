@@ -83,7 +83,7 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
 
         val lastSpaceIndex = seq.lastIndexOf(" ")
 
-        if(seq[seq.length-1] == ' ') {
+        if(seq.isNotEmpty() && seq[seq.length-1] == ' ') {
             val word = seq.substring(lastSpaceIndex)
 
             inputConnection.deleteSurroundingText(word.length, 0)
