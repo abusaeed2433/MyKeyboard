@@ -18,7 +18,7 @@ import kotlin.random.Random
 class MyKeyboardService : InputMethodService(){
 
     companion object{
-        const val LETTER_DELETION_INTERVAL = 150L
+        const val LETTER_DELETION_INTERVAL = 50L
     }
 
     private lateinit var myKeyboard: MyKeyboard
