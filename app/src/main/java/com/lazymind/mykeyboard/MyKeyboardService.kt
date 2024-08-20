@@ -42,7 +42,7 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
             val seq:CharSequence? = inputConnection.getSelectedText(0)
 
             if(seq.isNullOrBlank()){ // delete the last text
-                inputConnection.deleteSurroundingText(0, 0)
+                inputConnection.deleteSurroundingText(1, 0)
             }
             else { // delete the selected text, i.e. replace with empty string
                 inputConnection.commitText("",1)
@@ -75,11 +75,15 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
     private fun processFullStopPressed(){ // trim the last space
         val inputConnection = currentInputConnection
 
-        val seq = inputConnection.getTextBeforeCursor(5, 0) ?: return
+        val seq = inputConnection.getTextBeforeCursor(5, 0)
+        if(seq == null){
+            inputConnection.commitText(".",1)
+            return
+        }
 
         val lastSpaceIndex = seq.lastIndexOf(" ")
 
-        if(lastSpaceIndex != -1) {
+        if(seq[seq.length-1] == ' ') {
             val word = seq.substring(lastSpaceIndex)
 
             inputConnection.deleteSurroundingText(word.length, 0)
@@ -102,7 +106,10 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
 //        UserDictionary.Words.addWord()
 
         inputConnection.deleteSurroundingText( word.length, 0)
-        inputConnection.commitText("$str ",1)
+        inputConnection.commitText(
+            if(isCapsModeOn) "$str ".uppercase() else "$str ",
+            1
+        )
 
         processWord(inputConnection, showNextWord = true)
     }

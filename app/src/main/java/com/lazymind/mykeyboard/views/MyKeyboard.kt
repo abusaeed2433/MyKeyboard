@@ -410,6 +410,7 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         currentLayoutType = LayoutType.MAIN
         isSuggestionShowing = false
         clickedKey = null
+        startSingleCaps()
 
         invalidate()
     }
