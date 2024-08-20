@@ -1,6 +1,8 @@
 package com.lazymind.mykeyboard
 
 import android.inputmethodservice.InputMethodService
+import android.os.Handler
+import android.os.Looper
 import android.provider.UserDictionary
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -13,13 +15,16 @@ import java.io.InputStreamReader
 import kotlin.random.Random
 
 
-class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
+class MyKeyboardService : InputMethodService(){
+
+    companion object{
+        const val LETTER_DELETION_INTERVAL = 150L
+    }
 
     private lateinit var myKeyboard: MyKeyboard
 
     override fun onCreateInputView(): View {
-        myKeyboard =  MyKeyboard(this)
-        myKeyboard.setOnKeyboardActionListener(this)
+        setupMyKeyboard()
 
         window.window?.navigationBarColor = resources.getColor(R.color.keyboard_back,null)
 
@@ -33,44 +38,104 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
         myKeyboard.restartKeyboard()
     }
 
-    override fun onKeyClicked(layoutType: LayoutType, item: Item, isCapsModeOn:Boolean) {
 
-        if(item.isCaps(layoutType)) return
+    private fun setupMyKeyboard(){
+        myKeyboard =  MyKeyboard(this)
+        myKeyboard.setOnKeyboardActionListener(object : MyKeyboard.MyKeyboardListener{
+            override fun onKeyClicked(layoutType: LayoutType, item: Item, isCapsModeOn: Boolean) {
+                if(item.isCaps(layoutType)) return
+                if(item.isBackSpace(layoutType)) return
+
+                val inputConnection = currentInputConnection
+
+
+                if(item.isSpace(layoutType)){
+                    inputConnection.commitText(" ",1)
+                    processWord(inputConnection,showNextWord = true)
+                }
+                else if(item.isNext(layoutType)){
+                    handleEditorAction(inputConnection, currentInputEditorInfo)
+                }
+                else if(item.key == "."){
+                    processFullStopPressed()
+
+                }
+                else {
+                    inputConnection.commitText( if(isCapsModeOn) item.key.uppercase() else item.key.lowercase(), 1 )
+                    if(isCapsModeOn) myKeyboard.updateCapsModeIfNeeded()
+                    processWord(inputConnection)
+                }
+            }
+
+            override fun onSpecialClicked(str: String, isCapsModeOn: Boolean) {
+                val inputConnection = currentInputConnection
+
+                val seq = inputConnection.getTextBeforeCursor(30, 0) ?: return
+
+                val lastSpaceIndex = seq.lastIndexOf(" ")
+                val word = seq.substring(lastSpaceIndex+1)
+
+//        val dictionary = UserDictionary()
+//        UserDictionary.Words.addWord()
+
+                inputConnection.deleteSurroundingText( word.length, 0)
+                inputConnection.commitText(
+                    if(isCapsModeOn) "$str ".uppercase() else "$str ",
+                    1
+                )
+
+                processWord(inputConnection, showNextWord = true)
+            }
+
+            override fun onBackSpaceClickDown() {
+                startDeleting()
+                //processWord(inputConnection)
+            }
+
+            override fun onBackSpaceClickUp() {
+                stopDeleting()
+            }
+
+        })
+
+    }
+
+
+    private val handler:Handler = Handler(Looper.getMainLooper())
+    private var runnable:Runnable? = null
+    private var keepDeleting:Boolean = false
+
+    private fun startDeleting(){
         val inputConnection = currentInputConnection
+        val seq:CharSequence? = inputConnection.getSelectedText(0)
+        keepDeleting = true
 
-        if(item.isBackSpace(layoutType)){
-            val seq:CharSequence? = inputConnection.getSelectedText(0)
+        if(seq.isNullOrBlank()){ // delete the last text
+            inputConnection.deleteSurroundingText(1, 0)
+        }
+        else { // delete the selected text, i.e. replace with empty string
+            inputConnection.commitText("",1)
+        }
 
-            if(seq.isNullOrBlank()){ // delete the last text
-                inputConnection.deleteSurroundingText(1, 0)
-            }
-            else { // delete the selected text, i.e. replace with empty string
-                inputConnection.commitText("",1)
-            }
-            processWord(inputConnection)
-        }
-        else if(item.isSpace(layoutType)){
-            inputConnection.commitText(" ",1)
-            processWord(inputConnection,showNextWord = true)
-        }
-        else if(item.isNext(layoutType)){
-            handleEditorAction(inputConnection, currentInputEditorInfo)
-        }
-        else if(item.key == "."){
-            processFullStopPressed()
+        runnable = object : Runnable{
+            override fun run() {
+                if(!keepDeleting) return
 
-        }
-        else {
-            inputConnection.commitText(
-                if(isCapsModeOn) item.key.uppercase() else item.key.lowercase(),
-                1
-            )
-            if(isCapsModeOn){
-                myKeyboard.updateCapsModeIfNeeded()
+                inputConnection.deleteSurroundingText(1,0)
+                handler.postDelayed(this, LETTER_DELETION_INTERVAL)
             }
-            processWord(inputConnection)
+        }
+
+        handler.postDelayed(runnable!!, 2*LETTER_DELETION_INTERVAL) // for first time
+    }
+
+    private fun stopDeleting() {
+        if(runnable != null){
+            handler.removeCallbacks(runnable!!)
+            runnable = null
         }
     }
+
 
     private fun processFullStopPressed(){ // trim the last space
         val inputConnection = currentInputConnection
@@ -91,26 +156,6 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
 
         inputConnection.commitText(". ", 1)
         myKeyboard.startSingleCaps()
-        processWord(inputConnection, showNextWord = true)
-    }
-
-    override fun onSpecialClicked(str: String, isCapsModeOn: Boolean) {
-        val inputConnection = currentInputConnection
-
-        val seq = inputConnection.getTextBeforeCursor(30, 0) ?: return
-
-        val lastSpaceIndex = seq.lastIndexOf(" ")
-        val word = seq.substring(lastSpaceIndex+1)
-
-//        val dictionary = UserDictionary()
-//        UserDictionary.Words.addWord()
-
-        inputConnection.deleteSurroundingText( word.length, 0)
-        inputConnection.commitText(
-            if(isCapsModeOn) "$str ".uppercase() else "$str ",
-            1
-        )
-
         processWord(inputConnection, showNextWord = true)
     }
 

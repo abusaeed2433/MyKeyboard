@@ -352,6 +352,11 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
                 return true
             }
 
+            if(item.isBackSpace(currentLayoutType)){
+                listener?.onBackSpaceClickDown()
+                return true
+            }
+
             clickedKey = item
             invalidate()
 
@@ -360,6 +365,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         }
 
         if(event?.action == MotionEvent.ACTION_UP){
+            listener?.onBackSpaceClickUp()
+
             postDelayed({
                 clickedKey = null
                 invalidate()
@@ -584,6 +591,8 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
     interface MyKeyboardListener {
         fun onKeyClicked(layoutType: LayoutType,item: Item, isCapsModeOn:Boolean)
         fun onSpecialClicked(str: String, isCapsModeOn:Boolean)
+        fun onBackSpaceClickDown()
+        fun onBackSpaceClickUp()
     }
 
 }
