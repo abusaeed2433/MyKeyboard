@@ -51,6 +51,13 @@ class Layout(
         return null
     }
 
+    fun startSingleCapsIfInMain(){
+        if(layoutType != LayoutType.MAIN) return
+
+        capsMode = CapsType.NEXT
+        layoutListener.onRefreshRequest()
+    }
+
     fun updateCapsModeIfNext(){
         if(capsMode == CapsType.NEXT){
             capsMode = CapsType.OFF

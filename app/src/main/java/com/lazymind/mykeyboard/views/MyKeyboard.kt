@@ -402,6 +402,18 @@ class MyKeyboard(context: Context?, attrs: AttributeSet?):View(context, attrs) {
         getLayout().updateCapsModeIfNext()
     }
 
+    fun startSingleCaps(){
+        getLayout().startSingleCapsIfInMain()
+    }
+
+    fun restartKeyboard(){
+        currentLayoutType = LayoutType.MAIN
+        isSuggestionShowing = false
+        clickedKey = null
+
+        invalidate()
+    }
+
     private fun mainLayout(listener: Layout.LayoutListener):Layout{
         val noOfRow = 5
         val items = ArrayList<Row>()

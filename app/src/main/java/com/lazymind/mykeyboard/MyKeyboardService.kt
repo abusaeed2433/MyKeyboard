@@ -27,7 +27,13 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
         return myKeyboard
     }
 
-    override fun onKeyClicked(layoutType: LayoutType,item: Item, isCapsModeOn:Boolean) {
+    override fun onStartInputView(editorInfo: EditorInfo?, restarting: Boolean) {
+        super.onStartInputView(editorInfo, restarting)
+
+        myKeyboard.restartKeyboard()
+    }
+
+    override fun onKeyClicked(layoutType: LayoutType, item: Item, isCapsModeOn:Boolean) {
 
         if(item.isCaps(layoutType)) return
         val inputConnection = currentInputConnection
@@ -36,10 +42,10 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
             val seq:CharSequence? = inputConnection.getSelectedText(0)
 
             if(seq.isNullOrBlank()){ // delete the last text
-                inputConnection.deleteSurroundingText(1,0)
-            }
-            else { // delete the selected text
                 inputConnection.deleteSurroundingText(0, 0)
+            }
+            else { // delete the selected text, i.e. replace with empty string
+                inputConnection.commitText("",1)
             }
             processWord(inputConnection)
         }
@@ -49,6 +55,10 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
         }
         else if(item.isNext(layoutType)){
             handleEditorAction(inputConnection, currentInputEditorInfo)
+        }
+        else if(item.key == "."){
+            processFullStopPressed()
+
         }
         else {
             inputConnection.commitText(
@@ -60,6 +70,24 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
             }
             processWord(inputConnection)
         }
+    }
+
+    private fun processFullStopPressed(){ // trim the last space
+        val inputConnection = currentInputConnection
+
+        val seq = inputConnection.getTextBeforeCursor(5, 0) ?: return
+
+        val lastSpaceIndex = seq.lastIndexOf(" ")
+
+        if(lastSpaceIndex != -1) {
+            val word = seq.substring(lastSpaceIndex)
+
+            inputConnection.deleteSurroundingText(word.length, 0)
+        }
+
+        inputConnection.commitText(". ", 1)
+        myKeyboard.startSingleCaps()
+        processWord(inputConnection, showNextWord = true)
     }
 
     override fun onSpecialClicked(str: String, isCapsModeOn: Boolean) {
@@ -74,7 +102,7 @@ class MyKeyboardService : InputMethodService(), MyKeyboard.MyKeyboardListener{
 //        UserDictionary.Words.addWord()
 
         inputConnection.deleteSurroundingText( word.length, 0)
-        inputConnection.commitText("$str ",0)
+        inputConnection.commitText("$str ",1)
 
         processWord(inputConnection, showNextWord = true)
     }
